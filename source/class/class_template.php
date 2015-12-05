@@ -211,7 +211,6 @@ class template {
 	}
 
 	function evaltags($php) {
-		$php = str_replace('\"', '"', $php);
 		$i = count($this->replacecode['search']);
 		$this->replacecode['search'][$i] = $search = "<!--EVAL_TAG_$i-->";
 		$this->replacecode['replace'][$i] = "<? $php?>";
@@ -294,7 +293,6 @@ class template {
 	function transamp($str) {
 		$str = str_replace('&', '&amp;', $str);
 		$str = str_replace('&amp;amp;', '&amp;', $str);
-		$str = str_replace('\"', '"', $str);
 		return $str;
 	}
 
