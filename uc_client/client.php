@@ -134,11 +134,7 @@ function uc_api_input($data) {
 function uc_api_mysql($model, $action, $args=array()) {
 	global $uc_controls;
 	if(empty($uc_controls[$model])) {
-		if(function_exists("mysql_connect")) {
-			include_once UC_ROOT.'./lib/db.class.php';
-		} else {
-			include_once UC_ROOT.'./lib/dbi.class.php';
-		}
+		include_once UC_ROOT.'./lib/dbi.class.php';
 		include_once UC_ROOT.'./model/base.php';
 		include_once UC_ROOT."./control/$model.php";
 		eval("\$uc_controls['$model'] = new {$model}control();");

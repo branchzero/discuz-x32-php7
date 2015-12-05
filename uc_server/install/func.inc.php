@@ -58,14 +58,13 @@ function show_msg($error_no, $error_msg = 'ok', $success = 1, $quit = TRUE) {
 }
 
 function check_db($dbhost, $dbuser, $dbpw, $dbname, $tablepre) {
-	if(!function_exists('mysql_connect') && !function_exists('mysqli_connect')) {
-		show_msg('undefine_func', 'mysql_connect', 0);
+	if(!function_exists('mysqli_connect')) {
+		show_msg('undefine_func', 'mysqli_connect', 0);
 	}
-	$mysqlmode = function_exists('mysql_connect') ? 'mysql' : 'mysqli';
-	$link = ($mysqlmode == 'mysql') ? @mysql_connect($dbhost, $dbuser, $dbpw) : new mysqli($dbhost, $dbuser, $dbpw);
+	$link = new mysqli($dbhost, $dbuser, $dbpw);
 	if(!$link) {
-		$errno = ($mysqlmode == 'mysql') ? mysql_errno() : mysqli_errno();
-		$error = ($mysqlmode == 'mysql') ? mysql_error() : mysqli_error();
+		$errno = mysqli_errno();
+		$error = mysqli_error();
 		if($errno == 1045) {
 			show_msg('database_errno_1045', $error, 0);
 		} elseif($errno == 2003) {
@@ -74,11 +73,11 @@ function check_db($dbhost, $dbuser, $dbpw, $dbname, $tablepre) {
 			show_msg('database_connect_error', $error, 0);
 		}
 	} else {
-		if($query = (($mysqlmode == 'mysql') ? @mysql_query("SHOW TABLES FROM $dbname") : $link->query("SHOW TABLES FROM $dbname"))) {
+		if($query = $link->query("SHOW TABLES FROM $dbname")) {
 			if(!$query) {
 				return false;
 			}
-			while($row = (($mysqlmode == 'mysql') ? mysql_fetch_row($query) : $query->fetch_row())) {
+			while($row = $query->fetch_row()) {
 				if(preg_match("/^$tablepre/", $row[0])) {
 					return false;
 				}
@@ -1028,8 +1027,8 @@ function save_uc_config($config, $file) {
 	if($content = file_get_contents($file)) {
 		$content = trim($content);
 		$content = substr($content, -2) == '?>' ? substr($content, 0, -2) : $content;
-		$link = mysql_connect($ucdbhost, $ucdbuser, $ucdbpw, 1);
-		$uc_connnect = $link && mysql_select_db($ucdbname, $link) ? 'mysql' : '';
+		$link = new mysqli($ucdbhost, $ucdbuser, $ucdbpw, $ucdbname);
+		$uc_connnect = $link ? 'mysql' : '';
 		$content = insertconfig($content, "/define\('UC_CONNECT',\s*'.*?'\);/i", "define('UC_CONNECT', '$uc_connnect');");
 		$content = insertconfig($content, "/define\('UC_DBHOST',\s*'.*?'\);/i", "define('UC_DBHOST', '$ucdbhost');");
 		$content = insertconfig($content, "/define\('UC_DBUSER',\s*'.*?'\);/i", "define('UC_DBUSER', '$ucdbuser');");

@@ -70,11 +70,7 @@ class base {
 	}
 
 	function init_db() {
-		if(function_exists("mysql_connect")) {
-			require_once UC_ROOT.'lib/db.class.php';
-		} else {
-			require_once UC_ROOT.'lib/dbi.class.php';
-		}
+		require_once UC_ROOT.'lib/dbi.class.php';
 		$this->db = new ucclient_db();
 		$this->db->connect(UC_DBHOST, UC_DBUSER, UC_DBPW, '', UC_DBCHARSET, UC_DBCONNECT, UC_DBTABLEPRE);
 	}

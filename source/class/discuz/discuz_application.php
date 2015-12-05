@@ -76,9 +76,6 @@ class discuz_application extends discuz_base{
 	private function _init_env() {
 
 		error_reporting(E_ERROR);
-		if(PHP_VERSION < '5.3.0') {
-			set_magic_quotes_runtime(0);
-		}
 
 		define('MAGIC_QUOTES_GPC', function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc());
 		define('ICONV_ENABLE', function_exists('iconv'));
@@ -392,9 +389,9 @@ class discuz_application extends discuz_base{
 
 	private function _init_db() {
 		if($this->init_db) {
-			$driver = function_exists('mysql_connect') ? 'db_driver_mysql' : 'db_driver_mysqli';
+			$driver = 'db_driver_mysqli';
 			if(getglobal('config/db/slave')) {
-				$driver = function_exists('mysql_connect') ? 'db_driver_mysql_slave' : 'db_driver_mysqli_slave';
+				$driver = 'db_driver_mysqli_slave';
 			}
 			DB::init($driver, $this->config['db']);
 		}
