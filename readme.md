@@ -1,22 +1,3 @@
-#Discuz X3.2 UTF-8 20150609 For PHP7
+#Notice
 
-This is a a PHP7 Port of Discuz! X3.2, based on Discuz X3.2 UTF-8 20150609.
-*Please Do Not Use For Production*
-
-###Changes
-
-  - Remove MySQL and Switch to MySQLi
-  - Modify *preg_replace e modifier* to *preg_replace_callback*
-
-###Notice
-
-Maybe there are still some bugs remaining to fix.
-
-###Known Bugs
-
-  - None
-
-###Other
-
-Copyright: Comsenz Inc.
-Modifier: BranchZero Sun
+To avoid law issue, only leave a patch x32_php7_patch.diff, Please patch it to *Discuz X3.2 UTF-8 20150609*. Or go to release to download the latest code.

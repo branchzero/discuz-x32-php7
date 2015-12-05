@@ -1,0 +1,3463 @@
+From 945de2f7bfc9e02358f46abf48bf50d50a5ce98e Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 21:28:04 +0800
+Subject: [PATCH] rewrite fix
+
+---
+ source/function/cache/cache_setting.php | 33 ++++++++++++----------
+ source/function/function_admincp.php    | 49 +++++++++++++++++++++++++++++++--
+ 2 files changed, 65 insertions(+), 17 deletions(-)
+
+diff --git a/source/function/cache/cache_setting.php b/source/function/cache/cache_setting.php
+index a2b5be2..594bbbd 100644
+--- a/source/function/cache/cache_setting.php
++++ b/source/function/cache/cache_setting.php
+@@ -444,21 +444,24 @@ function build_cache_setting() {
+ 	if($_G['setting']['rewritestatus'] || $output['str']['search']) {
+ 		if($_G['setting']['rewritestatus']) {
+ 			require_once libfile('function/admincp');
++			$output['preg'] = rewritedata(0);
+ 		}
+-		foreach($data['footernavs'] as $id => $nav) {
+-			$data['footernavs'][$id]['code'] = rewritereplace($nav['code']);
+-		}
+-		foreach($data['spacenavs'] as $id => $nav) {
+-			$data['spacenavs'][$id]['code'] = rewritereplace($nav['code']);
+-		}
+-		foreach($data['mynavs'] as $id => $nav) {
+-			$data['mynavs'][$id]['code'] = rewritereplace($nav['code']);
+-		}
+-		foreach($data['topnavs'] as $id => $nav) {
+-			$data['topnavs'][$id]['code'] = rewritereplace($nav['code']);
+-		}
+-		foreach($data['plugins']['jsmenu'] as $key => $nav) {
+-			$data['plugins']['jsmenu'][$key]['url'] = rewritereplace($nav['url']);
++		if($output['preg']){
++			foreach($data['footernavs'] as $id => $nav) {
++				$data['footernavs'][$id]['code'] = rewritereplace($nav['code']);
++			}
++			foreach($data['spacenavs'] as $id => $nav) {
++				$data['spacenavs'][$id]['code'] = rewritereplace($nav['code']);
++			}
++			foreach($data['mynavs'] as $id => $nav) {
++				$data['mynavs'][$id]['code'] = rewritereplace($nav['code']);
++			}
++			foreach($data['topnavs'] as $id => $nav) {
++				$data['topnavs'][$id]['code'] = rewritereplace($nav['code']);
++			}
++			foreach($data['plugins']['jsmenu'] as $key => $nav) {
++				$data['plugins']['jsmenu'][$key]['url'] = rewritereplace($nav['url']);
++			}
+ 		}
+ 	}
+ 	$data['output'] = $output;
+@@ -1065,4 +1068,4 @@ function parsehighlight($highlight) {
+ 	return $style;
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/source/function/function_admincp.php b/source/function/function_admincp.php
+index 224a79d..f3a82e6 100644
+--- a/source/function/function_admincp.php
++++ b/source/function/function_admincp.php
+@@ -1368,7 +1368,52 @@ function rewritereplace($content){
+ function rewritedata($alldata = 1) {
+ 	global $_G;
+ 	$data = array();
+-	if($alldata) {
++	if(!$alldata) {
++		if(in_array('portal_topic', $_G['setting']['rewritestatus'])) {
++			$data['search']['portal_topic'] = "/".$_G['domain']['pregxprw']['portal']."\?mod\=topic&(amp;)?topic\=([^#]+?)?\"([^\>]*)\>/e";
++			$data['replace']['portal_topic'] = "rewriteoutput('portal_topic', 0, '\\1', '\\3', '\\4')";
++		}
++
++		if(in_array('portal_article', $_G['setting']['rewritestatus'])) {
++			$data['search']['portal_article'] = "/".$_G['domain']['pregxprw']['portal']."\?mod\=view&(amp;)?aid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
++			$data['replace']['portal_article'] = "rewriteoutput('portal_article', 0, '\\1', '\\3', '\\5', '\\6')";
++		}
++
++		if(in_array('forum_forumdisplay', $_G['setting']['rewritestatus'])) {
++			$data['search']['forum_forumdisplay'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=forumdisplay&(amp;)?fid\=(\w+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
++			$data['replace']['forum_forumdisplay'] = "rewriteoutput('forum_forumdisplay', 0, '\\1', '\\3', '\\5', '\\6')";
++		}
++
++		if(in_array('forum_viewthread', $_G['setting']['rewritestatus'])) {
++			$data['search']['forum_viewthread'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=viewthread&(amp;)?tid\=(\d+)(&amp;extra\=(page\%3D(\d+))?)?(&amp;page\=(\d+))?\"([^\>]*)\>/e";
++			$data['replace']['forum_viewthread'] = "rewriteoutput('forum_viewthread', 0, '\\1', '\\3', '\\8', '\\6', '\\9')";
++		}
++
++		if(in_array('group_group', $_G['setting']['rewritestatus'])) {
++			$data['search']['group_group'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=group&(amp;)?fid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
++			$data['replace']['group_group'] = "rewriteoutput('group_group', 0, '\\1', '\\3', '\\5', '\\6')";
++		}
++
++		if(in_array('home_space', $_G['setting']['rewritestatus'])) {
++			$data['search']['home_space'] = "/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?(uid\=(\d+)|username\=([^&]+?))\"([^\>]*)\>/e";
++			$data['replace']['home_space'] = "rewriteoutput('home_space', 0, '\\1', '\\4', '\\5', '\\6')";
++		}
++
++		if(in_array('home_blog', $_G['setting']['rewritestatus'])) {
++			$data['search']['home_blog'] = "/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?uid\=(\d+)&(amp;)?do=blog&(amp;)?id=(\d+)\"([^\>]*)\>/e";
++			$data['replace']['home_blog'] = "rewriteoutput('home_blog', 0, '\\1', '\\3', '\\6', '\\7')";
++		}
++
++		if(in_array('forum_archiver', $_G['setting']['rewritestatus'])) {
++			$data['search']['forum_archiver'] = "/<a href\=\"\?(fid|tid)\-(\d+)\.html(&page\=(\d+))?\"([^\>]*)\>/e";
++			$data['replace']['forum_archiver'] = "rewriteoutput('forum_archiver', 0, '\\1', '\\2', '\\4', '\\5')";
++		}
++
++		if(in_array('plugin', $_G['setting']['rewritestatus'])) {
++			$data['search']['plugin'] = "/<a href\=\"plugin\.php\?id=([a-z]+[a-z0-9_]*):([a-z0-9_\-]+)(&amp;|&)?(.*?)?\"([^\>]*)\>/e";
++			$data['replace']['plugin'] = "rewriteoutput('plugin', 0, '\\1', '\\2', '\\3', '\\4', '\\5')";
++		}
++	} else {
+ 		$data['rulesearch']['portal_topic'] = 'topic-{name}.html';
+ 		$data['rulereplace']['portal_topic'] = 'portal.php?mod=topic&topic={name}';
+ 		$data['rulevars']['portal_topic']['{name}'] = '(.+)';
+@@ -1460,4 +1505,4 @@ function siteftp_upload($readfile, $writefile) {
+ 	}
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+-- 
+2.5.1.windows.1
+
+From 6fc87ac442ba40da9541f4e120c22837081c52d3 Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 21:17:16 +0800
+Subject: [PATCH] threadsort && rewrite fix
+
+---
+ source/function/cache/cache_setting.php | 31 ++++++--------
+ source/function/function_admincp.php    | 75 +++++++++++++++------------------
+ source/function/function_threadsort.php | 16 +++----
+ 3 files changed, 57 insertions(+), 65 deletions(-)
+
+diff --git a/source/function/cache/cache_setting.php b/source/function/cache/cache_setting.php
+index e2e10ce..a2b5be2 100644
+--- a/source/function/cache/cache_setting.php
++++ b/source/function/cache/cache_setting.php
+@@ -444,24 +444,21 @@ function build_cache_setting() {
+ 	if($_G['setting']['rewritestatus'] || $output['str']['search']) {
+ 		if($_G['setting']['rewritestatus']) {
+ 			require_once libfile('function/admincp');
+-			$output['preg'] = rewritedata(0);
+ 		}
+-		if($output['preg']) {
+-			foreach($data['footernavs'] as $id => $nav) {
+-				$data['footernavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+-			}
+-			foreach($data['spacenavs'] as $id => $nav) {
+-				$data['spacenavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+-			}
+-			foreach($data['mynavs'] as $id => $nav) {
+-				$data['mynavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+-			}
+-			foreach($data['topnavs'] as $id => $nav) {
+-				$data['topnavs'][$id]['code'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['code']);
+-			}
+-			foreach($data['plugins']['jsmenu'] as $key => $nav) {
+-				$data['plugins']['jsmenu'][$key]['url'] = preg_replace($output['preg']['search'], $output['preg']['replace'], $nav['url']);
+-			}
++		foreach($data['footernavs'] as $id => $nav) {
++			$data['footernavs'][$id]['code'] = rewritereplace($nav['code']);
++		}
++		foreach($data['spacenavs'] as $id => $nav) {
++			$data['spacenavs'][$id]['code'] = rewritereplace($nav['code']);
++		}
++		foreach($data['mynavs'] as $id => $nav) {
++			$data['mynavs'][$id]['code'] = rewritereplace($nav['code']);
++		}
++		foreach($data['topnavs'] as $id => $nav) {
++			$data['topnavs'][$id]['code'] = rewritereplace($nav['code']);
++		}
++		foreach($data['plugins']['jsmenu'] as $key => $nav) {
++			$data['plugins']['jsmenu'][$key]['url'] = rewritereplace($nav['url']);
+ 		}
+ 	}
+ 	$data['output'] = $output;
+diff --git a/source/function/function_admincp.php b/source/function/function_admincp.php
+index 86c6471..224a79d 100644
+--- a/source/function/function_admincp.php
++++ b/source/function/function_admincp.php
+@@ -1325,55 +1325,50 @@ function getposttableselect() {
+ 	return $posttableselect;
+ }
+ 
+-function rewritedata($alldata = 1) {
++function rewritereplace($content){
+ 	global $_G;
+-	$data = array();
+-	if(!$alldata) {
+-		if(in_array('portal_topic', $_G['setting']['rewritestatus'])) {
+-			$data['search']['portal_topic'] = "/".$_G['domain']['pregxprw']['portal']."\?mod\=topic&(amp;)?topic\=([^#]+?)?\"([^\>]*)\>/e";
+-			$data['replace']['portal_topic'] = "rewriteoutput('portal_topic', 0, '\\1', '\\3', '\\4')";
+-		}
++	if(in_array('portal_topic', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/".$_G['domain']['pregxprw']['portal']."\?mod\=topic&(amp;)?topic\=([^#]+?)?\"([^\>]*)\>/", function($matches) { return rewriteoutput('portal_topic', 0, $matches[1], $matches[3], $matches[4]); }, $content);
++	}
+ 
+-		if(in_array('portal_article', $_G['setting']['rewritestatus'])) {
+-			$data['search']['portal_article'] = "/".$_G['domain']['pregxprw']['portal']."\?mod\=view&(amp;)?aid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+-			$data['replace']['portal_article'] = "rewriteoutput('portal_article', 0, '\\1', '\\3', '\\5', '\\6')";
+-		}
++	if(in_array('portal_article', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/".$_G['domain']['pregxprw']['portal']."\?mod\=view&(amp;)?aid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/", function($matches) { return rewriteoutput('portal_article', 0, $matches[1], $matches[3], $matches[5], $matches[6]); }, $content);
++	}
+ 
+-		if(in_array('forum_forumdisplay', $_G['setting']['rewritestatus'])) {
+-			$data['search']['forum_forumdisplay'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=forumdisplay&(amp;)?fid\=(\w+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+-			$data['replace']['forum_forumdisplay'] = "rewriteoutput('forum_forumdisplay', 0, '\\1', '\\3', '\\5', '\\6')";
+-		}
++	if(in_array('forum_forumdisplay', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/".$_G['domain']['pregxprw']['forum']."\?mod\=forumdisplay&(amp;)?fid\=(\w+)(&amp;page\=(\d+))?\"([^\>]*)\>/", function($matches) { return rewriteoutput('forum_forumdisplay', 0, $matches[1], $matches[3], $matches[5], $matches[6]); }, $content);
++	}
+ 
+-		if(in_array('forum_viewthread', $_G['setting']['rewritestatus'])) {
+-			$data['search']['forum_viewthread'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=viewthread&(amp;)?tid\=(\d+)(&amp;extra\=(page\%3D(\d+))?)?(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+-			$data['replace']['forum_viewthread'] = "rewriteoutput('forum_viewthread', 0, '\\1', '\\3', '\\8', '\\6', '\\9')";
+-		}
++	if(in_array('forum_viewthread', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/".$_G['domain']['pregxprw']['forum']."\?mod\=viewthread&(amp;)?tid\=(\d+)(&amp;extra\=(page\%3D(\d+))?)?(&amp;page\=(\d+))?\"([^\>]*)\>/", function($matches) { return rewriteoutput('forum_viewthread', 0, $matches[1], $matches[3], $matches[8], $matches[6], $matches[9]); }, $content);
++	}
+ 
+-		if(in_array('group_group', $_G['setting']['rewritestatus'])) {
+-			$data['search']['group_group'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=group&(amp;)?fid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+-			$data['replace']['group_group'] = "rewriteoutput('group_group', 0, '\\1', '\\3', '\\5', '\\6')";
+-		}
++	if(in_array('group_group', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/".$_G['domain']['pregxprw']['forum']."\?mod\=group&(amp;)?fid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/", function($matches) { return rewriteoutput('group_group', 0, $matches[1], $matches[3], $matches[5], $matches[6]); }, $content);
++	}
+ 
+-		if(in_array('home_space', $_G['setting']['rewritestatus'])) {
+-			$data['search']['home_space'] = "/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?(uid\=(\d+)|username\=([^&]+?))\"([^\>]*)\>/e";
+-			$data['replace']['home_space'] = "rewriteoutput('home_space', 0, '\\1', '\\4', '\\5', '\\6')";
+-		}
++	if(in_array('home_space', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?(uid\=(\d+)|username\=([^&]+?))\"([^\>]*)\>/", function($matches) { return rewriteoutput('home_space', 0, $matches[1], $matches[4], $matches[5], $matches[6]); }, $content);
++	}
+ 
+-		if(in_array('home_blog', $_G['setting']['rewritestatus'])) {
+-			$data['search']['home_blog'] = "/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?uid\=(\d+)&(amp;)?do=blog&(amp;)?id=(\d+)\"([^\>]*)\>/e";
+-			$data['replace']['home_blog'] = "rewriteoutput('home_blog', 0, '\\1', '\\3', '\\6', '\\7')";
+-		}
++	if(in_array('home_blog', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?uid\=(\d+)&(amp;)?do=blog&(amp;)?id=(\d+)\"([^\>]*)\>/", function($matches) { return rewriteoutput('home_blog', 0, $matches[1], $matches[3], $matches[6], $matches[7]); }, $content);
++	}
+ 
+-		if(in_array('forum_archiver', $_G['setting']['rewritestatus'])) {
+-			$data['search']['forum_archiver'] = "/<a href\=\"\?(fid|tid)\-(\d+)\.html(&page\=(\d+))?\"([^\>]*)\>/e";
+-			$data['replace']['forum_archiver'] = "rewriteoutput('forum_archiver', 0, '\\1', '\\2', '\\4', '\\5')";
+-		}
++	if(in_array('forum_archiver', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/<a href\=\"\?(fid|tid)\-(\d+)\.html(&page\=(\d+))?\"([^\>]*)\>/", function($matches) { return rewriteoutput('forum_archiver', 0, $matches[1], $matches[2], $matches[4], $matches[5]); }, $content);
++	}
+ 
+-		if(in_array('plugin', $_G['setting']['rewritestatus'])) {
+-			$data['search']['plugin'] = "/<a href\=\"plugin\.php\?id=([a-z]+[a-z0-9_]*):([a-z0-9_\-]+)(&amp;|&)?(.*?)?\"([^\>]*)\>/e";
+-			$data['replace']['plugin'] = "rewriteoutput('plugin', 0, '\\1', '\\2', '\\3', '\\4', '\\5')";
+-		}
+-	} else {
++	if(in_array('plugin', $_G['setting']['rewritestatus'])) {
++		$content = preg_replace_callback("/<a href\=\"plugin\.php\?id=([a-z]+[a-z0-9_]*):([a-z0-9_\-]+)(&amp;|&)?(.*?)?\"([^\>]*)\>/", function($matches) { return rewriteoutput('plugin', 0, $matches[1], $matches[2], $matches[3], $matches[4], $matches[5]); }, $content);
++	}
++	return $content;
++}
++
++function rewritedata($alldata = 1) {
++	global $_G;
++	$data = array();
++	if($alldata) {
+ 		$data['rulesearch']['portal_topic'] = 'topic-{name}.html';
+ 		$data['rulereplace']['portal_topic'] = 'portal.php?mod=topic&topic={name}';
+ 		$data['rulevars']['portal_topic']['{name}'] = '(.+)';
+diff --git a/source/function/function_threadsort.php b/source/function/function_threadsort.php
+index 8ca02d3..5f05646 100644
+--- a/source/function/function_threadsort.php
++++ b/source/function/function_threadsort.php
+@@ -274,11 +274,11 @@ function showsorttemplate($sortid, $fid, $sortoptionarray, $templatearray, $thre
+ 		foreach($sortoptionarray as $sortid => $optionarray) {
+ 			foreach($optionarray as $option) {
+ 				if($option['subjectshow']) {
+-					$searchtitle[$sortid][] = '/{('.$option['identifier'].')}/e';
+-					$searchvalue[$sortid][] = '/\[('.$option['identifier'].')value\]/e';
+-					$searchvalue[$sortid][] = '/{('.$option['identifier'].')_value}/e';
+-					$searchunit[$sortid][] = '/\[('.$option['identifier'].')unit\]/e';
+-					$searchunit[$sortid][] = '/{('.$option['identifier'].')_unit}/e';
++					$searchtitle[$sortid][] = '/{('.$option['identifier'].')}/';
++					$searchvalue[$sortid][] = '/\[('.$option['identifier'].')value\]/';
++					$searchvalue[$sortid][] = '/{('.$option['identifier'].')_value}/';
++					$searchunit[$sortid][] = '/\[('.$option['identifier'].')unit\]/';
++					$searchunit[$sortid][] = '/{('.$option['identifier'].')_unit}/';
+ 				}
+ 			}
+ 		}
+@@ -294,9 +294,9 @@ function showsorttemplate($sortid, $fid, $sortoptionarray, $templatearray, $thre
+ 								$sortdata[$tid]['subject'],
+ 								"<a href=\"forum.php?mod=viewthread&tid=$tid\">\\1</a>"
+ 							), stripslashes($templatearray[$sortid]));
+-			$stemplate[$sortid][$tid] = preg_replace($searchtitle[$sortid], "showlistoption('\\1', 'title', '$tid', '$sortid')", $stemplate[$sortid][$tid]);
+-			$stemplate[$sortid][$tid] = preg_replace($searchvalue[$sortid], "showlistoption('\\1', 'value', '$tid', '$sortid')", $stemplate[$sortid][$tid]);
+-			$stemplate[$sortid][$tid] = preg_replace($searchunit[$sortid], "showlistoption('\\1', 'unit', '$tid', '$sortid')", $stemplate[$sortid][$tid]);
++			$stemplate[$sortid][$tid] = preg_replace_callback($searchtitle[$sortid], function($matches) use($tid, $sortid) { return showlistoption($matches[1], 'title', $tid, $sortid); }, $stemplate[$sortid][$tid]);
++			$stemplate[$sortid][$tid] = preg_replace_callback($searchvalue[$sortid], function($matches) use($tid, $sortid) { return showlistoption($matches[1], 'value', $tid, $sortid); }, $stemplate[$sortid][$tid]);
++			$stemplate[$sortid][$tid] = preg_replace_callback($searchunit[$sortid], function($matches) use($tid, $sortid) { return showlistoption($matches[1], 'unit', $tid, $sortid); }, $stemplate[$sortid][$tid]);
+ 		}
+ 	}
+ 
+-- 
+2.5.1.windows.1
+
+From 57d1649341e3572ea9b77cd5f78b9da3ef1f51e2 Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 19:39:09 +0800
+Subject: [PATCH] Fix Install Problem
+
+---
+ install/index.php | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/install/index.php b/install/index.php
+index b750b06..2bc25e8 100644
+--- a/install/index.php
++++ b/install/index.php
+@@ -9,7 +9,6 @@
+ 
+ error_reporting(E_ERROR | E_WARNING | E_PARSE);
+ @set_time_limit(1000);
+-@set_magic_quotes_runtime(0);
+ 
+ define('IN_DISCUZ', TRUE);
+ define('IN_COMSENZ', TRUE);
+-- 
+2.5.1.windows.1
+
+From b3e1699640f37650e3773340a3cf4dbe39d1ae27 Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 18:27:40 +0800
+Subject: [PATCH] slashes fixed add
+
+---
+ source/class/class_template.php | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/source/class/class_template.php b/source/class/class_template.php
+index f985d9d..4fb944d 100644
+--- a/source/class/class_template.php
++++ b/source/class/class_template.php
+@@ -308,13 +308,11 @@ class template {
+ 	}
+ 
+ 	function stripscriptamp($s, $extra) {
+-		$extra = str_replace('\\"', '"', $extra);
+ 		$s = str_replace('&amp;', '&', $s);
+ 		return "<script src=\"$s\" type=\"text/javascript\"$extra></script>";
+ 	}
+ 
+ 	function stripblock($var, $s) {
+-		$s = str_replace('\\"', '"', $s);
+ 		$s = preg_replace("/<\?=\\\$(.+?)\?>/", "{\$\\1}", $s);
+ 		preg_match_all("/<\?=(.+?)\?>/e", $s, $constary);
+ 		$constadd = '';
+-- 
+2.5.1.windows.1
+
+From d2508112eb5046ee0a50f9374fdf321236cfb482 Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 17:52:15 +0800
+Subject: [PATCH] Fix Eval Tag Problem. Beta Version
+
+---
+ .gitignore                      | 1 +
+ readme.md                       | 4 ++--
+ source/class/class_template.php | 4 +---
+ 3 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index 58e90b3..009dafb 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,2 +1,3 @@
+ data/
+ config/
++install/
+diff --git a/readme.md b/readme.md
+index 06dde3a..1a7c73b 100644
+--- a/readme.md
++++ b/readme.md
+@@ -10,11 +10,11 @@ This is a a PHP7 Port of Discuz! X3.2, based on Discuz X3.2 UTF-8 20150609.
+ 
+ ###Notice
+ 
+-There are still some bugs remaining to fix.
++Maybe there are still some bugs remaining to fix.
+ 
+ ###Known Bugs
+ 
+-  - Template Engine's Eval tags seem to work abnormally. (seems like preg_replace with e modifier has addslashes but preg_replace_callback one doesn't to do)
++  - None
+ 
+ ###Other
+ 
+diff --git a/source/class/class_template.php b/source/class/class_template.php
+index 5413365..f985d9d 100644
+--- a/source/class/class_template.php
++++ b/source/class/class_template.php
+@@ -211,7 +211,6 @@ class template {
+ 	}
+ 
+ 	function evaltags($php) {
+-		$php = str_replace('\"', '"', $php);
+ 		$i = count($this->replacecode['search']);
+ 		$this->replacecode['search'][$i] = $search = "<!--EVAL_TAG_$i-->";
+ 		$this->replacecode['replace'][$i] = "<? $php?>";
+@@ -294,7 +293,6 @@ class template {
+ 	function transamp($str) {
+ 		$str = str_replace('&', '&amp;', $str);
+ 		$str = str_replace('&amp;amp;', '&amp;', $str);
+-		$str = str_replace('\"', '"', $str);
+ 		return $str;
+ 	}
+ 
+@@ -337,4 +335,4 @@ class template {
+ 
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+-- 
+2.5.1.windows.1
+
+From b37a878a1d04b5f626d0761c5c0e0c9611e758a7 Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 16:52:16 +0800
+Subject: [PATCH] modify preg_replace with e modifier to preg_replace_callback
+
+---
+ source/admincp/admincp_checktools.php            |  2 +-
+ source/admincp/admincp_setting.php               | 10 ++--
+ source/class/class_bbcode.php                    |  3 +-
+ source/class/class_template.php                  | 57 ++++++++++-----------
+ source/class/helper/helper_mobile.php            |  2 +-
+ source/class/helper/helper_seo.php               |  4 +-
+ source/class/table/table_forum_postcomment.php   |  2 +-
+ source/class/table/table_forum_thread.php        |  2 +-
+ source/function/cache/cache_setting.php          |  6 +--
+ source/function/cache/cache_styles.php           |  2 +-
+ source/function/function_blog.php                | 11 ++--
+ source/function/function_core.php                |  6 +--
+ source/function/function_discuzcode.php          | 64 +++++++++---------------
+ source/function/function_editor.php              | 21 +++-----
+ source/function/function_followcode.php          | 56 ++++++++-------------
+ source/function/function_forum.php               |  4 +-
+ source/function/function_search.php              |  3 +-
+ source/include/portalcp/portalcp_article.php     |  6 +--
+ source/module/forum/forum_ajax.php               |  4 +-
+ source/module/forum/forum_misc.php               |  2 +-
+ source/module/forum/forum_viewthread.php         |  6 +--
+ source/module/misc/misc_mobile.php               |  2 +-
+ source/plugin/cloudsearch/cloudsearch.inc.php    |  2 +-
+ source/plugin/manyou/Service/Connect.php         |  2 +-
+ source/plugin/mobile/api/4/viewthread.php        |  2 +-
+ source/plugin/mobile/discuzcode.func.php         | 58 ++++++++-------------
+ source/plugin/qqconnect/connect/connect_feed.php |  8 +--
+ source/plugin/soso_smilies/soso.class.php        | 12 ++---
+ uc_client/lib/uccode.class.php                   | 15 ++----
+ uc_server/lib/template.class.php                 | 29 ++++-------
+ uc_server/lib/uccode.class.php                   | 15 ++----
+ 31 files changed, 170 insertions(+), 248 deletions(-)
+
+diff --git a/source/admincp/admincp_checktools.php b/source/admincp/admincp_checktools.php
+index f6ccfe6..58ad0f4 100644
+--- a/source/admincp/admincp_checktools.php
++++ b/source/admincp/admincp_checktools.php
+@@ -575,7 +575,7 @@ function checkhook($currentdir, $ext = '', $sub = 1, $skip = '') {
+ 			} else {
+ 				$data = file_get_contents($file);
+ 				$hooks = array();
+-				preg_replace("/\{hook\/(\w+?)(\s+(.+?))?\}/ie", "findhook('\\1', '\\3')", $data);
++				preg_replace_callback("/\{hook\/(\w+?)(\s+(.+?))?\}/i", function($matches) { return findhook($matches[1], $matches[3]); }, $data);
+ 				if($hooks) {
+ 					foreach($hooks as $v) {
+ 						$hookdata[$file][$v][] = $v;
+diff --git a/source/admincp/admincp_setting.php b/source/admincp/admincp_setting.php
+index 0ddb540..518ad8f 100644
+--- a/source/admincp/admincp_setting.php
++++ b/source/admincp/admincp_setting.php
+@@ -2553,15 +2553,11 @@ EOT;
+ 		$settingnew['uc']['key'] = addslashes($settingnew['uc']['key'] == '********' ? addslashes(UC_KEY) : $settingnew['uc']['key']);
+ 
+ 		if($settingnew['uc']['connect']) {
+-			$uc_dblink = function_exists("mysql_connect") ? @mysql_connect($settingnew['uc']['dbhost'], $settingnew['uc']['dbuser'], $ucdbpassnew, 1) : new mysqli($settingnew['uc']['dbhost'], $settingnew['uc']['dbuser'], $ucdbpassnew);
++			$uc_dblink = new mysqli($settingnew['uc']['dbhost'], $settingnew['uc']['dbuser'], $ucdbpassnew);
+ 			if(!$uc_dblink) {
+ 				cpmsg('uc_database_connect_error', '', 'error');
+ 			} else {
+-				if(function_exists("mysql_connect")) {
+-					mysql_close($uc_dblink);
+-				} else {
+-					$uc_dblink->close();
+-				}
++				$uc_dblink->close();
+ 			}
+ 		}
+ 
+@@ -3695,4 +3691,4 @@ function showsetting_threadprfile($authorinfoitems, $template = array()) {
+ 		<tr><td colspan="2"><div class="threadprofilenode">'.$buttons.'</div><textarea name="templatenew[top]" id="ttop" class="marginbot" style="width:80%" rows="10" onkeyup="textareasize(this)" onkeydown="textareakey(this, event)">'.$template_top.'</textarea></td></tr>';
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/source/class/class_bbcode.php b/source/class/class_bbcode.php
+index 8d559ed..cb386fe 100644
+--- a/source/class/class_bbcode.php
++++ b/source/class/class_bbcode.php
+@@ -51,9 +51,8 @@ class bbcode {
+ 		}
+ 
+ 		if($parseurl==2) {
+-			$this->search_exp[] = "/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies";
+-			$this->replace_exp[] = '$this->bb_img(\'\\1\')';
+ 			$message = bbcode::parseurl($message);
++			$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is" , function($matches) { return $this->bb_img($matches[1]); }, $message);
+ 		}
+ 
+ 		@$message = str_replace($this->search_str, $this->replace_str,preg_replace($this->search_exp, $this->replace_exp, $message, 20));
+diff --git a/source/class/class_template.php b/source/class/class_template.php
+index 3aa12aa..5413365 100644
+--- a/source/class/class_template.php
++++ b/source/class/class_template.php
+@@ -44,27 +44,27 @@ class template {
+ 		$this->subtemplates = array();
+ 		for($i = 1; $i <= 3; $i++) {
+ 			if(strexists($template, '{subtemplate')) {
+-				$template = preg_replace("/[\n\r\t]*(\<\!\-\-)?\{subtemplate\s+([a-z0-9_:\/]+)\}(\-\-\>)?[\n\r\t]*/ies", "\$this->loadsubtemplate('\\2')", $template);
++				$template = preg_replace_callback("/[\n\r\t]*(\<\!\-\-)?\{subtemplate\s+([a-z0-9_:\/]+)\}(\-\-\>)?[\n\r\t]*/is", function($matches) { return $this->loadsubtemplate($matches[2]); }, $template);
+ 			}
+ 		}
+ 
+ 		$template = preg_replace("/([\n\r]+)\t+/s", "\\1", $template);
+ 		$template = preg_replace("/\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
+-		$template = preg_replace("/\{lang\s+(.+?)\}/ies", "\$this->languagevar('\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{block\/(\d+?)\}[\n\r\t]*/ie", "\$this->blocktags('\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{blockdata\/(\d+?)\}[\n\r\t]*/ie", "\$this->blockdatatags('\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{ad\/(.+?)\}[\n\r\t]*/ie", "\$this->adtags('\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{ad\s+([a-zA-Z0-9_\[\]]+)\/(.+?)\}[\n\r\t]*/ie", "\$this->adtags('\\2', '\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{date\((.+?)\)\}[\n\r\t]*/ie", "\$this->datetags('\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{avatar\((.+?)\)\}[\n\r\t]*/ie", "\$this->avatartags('\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{eval\}\s*(\<\!\-\-)*(.+?)(\-\-\>)*\s*\{\/eval\}[\n\r\t]*/ies", "\$this->evaltags('\\2')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{eval\s+(.+?)\s*\}[\n\r\t]*/ies", "\$this->evaltags('\\1')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{csstemplate\}[\n\r\t]*/ies", "\$this->loadcsstemplate()", $template);
++		$template = preg_replace_callback("/\{lang\s+(.+?)\}/is", function($matches) { return $this->languagevar($matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{block\/(\d+?)\}[\n\r\t]*/i", function($matches) { return $this->blocktags($matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{blockdata\/(\d+?)\}[\n\r\t]*/i", function($matches) { return $this->blockdatatags($matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{ad\/(.+?)\}[\n\r\t]*/i", function($matches) { return $this->adtags($matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{ad\s+([a-zA-Z0-9_\[\]]+)\/(.+?)\}[\n\r\t]*/i", function($matches) { return $this->adtags($matches[2], $matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{date\((.+?)\)\}[\n\r\t]*/i", function($matches) { return $this->datetags($matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{avatar\((.+?)\)\}[\n\r\t]*/i", function($matches) { return $this->avatartags($matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{eval\}\s*(\<\!\-\-)*(.+?)(\-\-\>)*\s*\{\/eval\}[\n\r\t]*/is", function($matches) { return $this->evaltags($matches[2]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{eval\s+(.+?)\s*\}[\n\r\t]*/is", function($matches) { return $this->evaltags($matches[1]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{csstemplate\}[\n\r\t]*/is", function($matches) { return $this->loadcsstemplate(); }, $template);
+ 		$template = str_replace("{LF}", "<?=\"\\n\"?>", $template);
+ 		$template = preg_replace("/\{(\\\$[a-zA-Z0-9_\-\>\[\]\'\"\$\.\x7f-\xff]+)\}/s", "<?=\\1?>", $template);
+-		$template = preg_replace("/\{hook\/(\w+?)(\s+(.+?))?\}/ie", "\$this->hooktags('\\1', '\\3')", $template);
+-		$template = preg_replace("/$var_regexp/es", "template::addquote('<?=\\1?>')", $template);
+-		$template = preg_replace("/\<\?\=\<\?\=$var_regexp\?\>\?\>/es", "\$this->addquote('<?=\\1?>')", $template);
++		$template = preg_replace_callback("/\{hook\/(\w+?)(\s+(.+?))?\}/i", function($matches) { return $this->hooktags($matches[1], $matches[3]); }, $template);
++		$template = preg_replace_callback("/$var_regexp/s", function($matches) { return template::addquote('<?='.$matches[1].'?>'); }, $template);
++		$template = preg_replace_callback("/\<\?\=\<\?\=$var_regexp\?\>\?\>/s", function($matches) { return $this->addquote('<?='.$matches[1].'?>'); }, $template);
+ 
+ 		$headeradd = $headerexists ? "hookscriptoutput('$basefile');" : '';
+ 		if(!empty($this->subtemplates)) {
+@@ -82,17 +82,17 @@ class template {
+ 
+ 		$template = "<? if(!defined('IN_DISCUZ')) exit('Access Denied'); {$headeradd}?>\n$template";
+ 
+-		$template = preg_replace("/[\n\r\t]*\{template\s+([a-z0-9_:\/]+)\}[\n\r\t]*/ies", "\$this->stripvtags('<? include template(\'\\1\'); ?>')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{template\s+(.+?)\}[\n\r\t]*/ies", "\$this->stripvtags('<? include template(\'\\1\'); ?>')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{echo\s+(.+?)\}[\n\r\t]*/ies", "\$this->stripvtags('<? echo \\1; ?>')", $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{template\s+([a-z0-9_:\/]+)\}[\n\r\t]*/is", function($matches) { return $this->stripvtags('<? include template(\''.$matches[1].'\'); ?>'); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{template\s+(.+?)\}[\n\r\t]*/is", function($matches) { return $this->stripvtags('<? include template(\''.$matches[1].'\'); ?>'); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{echo\s+(.+?)\}[\n\r\t]*/is", function($matches) { return $this->stripvtags('<? echo '.$matches[1].'; ?>'); }, $template);
++		$template = preg_replace_callback("/([\n\r\t]*)\{if\s+(.+?)\}([\n\r\t]*)/is", function($matches) { return $this->stripvtags($matches[1].'<? if('.$matches[2].') { ?>'.$matches[3]); }, $template);
++		$template = preg_replace_callback("/([\n\r\t]*)\{elseif\s+(.+?)\}([\n\r\t]*)/is", function($matches) { return $this->stripvtags($matches[1].'<? } elseif('.$matches[2].') { ?>'.$matches[3]); }, $template);
+ 
+-		$template = preg_replace("/([\n\r\t]*)\{if\s+(.+?)\}([\n\r\t]*)/ies", "\$this->stripvtags('\\1<? if(\\2) { ?>\\3')", $template);
+-		$template = preg_replace("/([\n\r\t]*)\{elseif\s+(.+?)\}([\n\r\t]*)/ies", "\$this->stripvtags('\\1<? } elseif(\\2) { ?>\\3')", $template);
+ 		$template = preg_replace("/\{else\}/i", "<? } else { ?>", $template);
+ 		$template = preg_replace("/\{\/if\}/i", "<? } ?>", $template);
+ 
+-		$template = preg_replace("/[\n\r\t]*\{loop\s+(\S+)\s+(\S+)\}[\n\r\t]*/ies", "\$this->stripvtags('<? if(is_array(\\1)) foreach(\\1 as \\2) { ?>')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}[\n\r\t]*/ies", "\$this->stripvtags('<? if(is_array(\\1)) foreach(\\1 as \\2 => \\3) { ?>')", $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{loop\s+(\S+)\s+(\S+)\}[\n\r\t]*/is", function($matches) { return $this->stripvtags('<? if(is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].') { ?>'); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}[\n\r\t]*/is", function($matches) { return $this->stripvtags('<? if(is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>'); }, $template);
+ 		$template = preg_replace("/\{\/loop\}/i", "<? } ?>", $template);
+ 
+ 		$template = preg_replace("/\{$const_regexp\}/s", "<?=\\1?>", $template);
+@@ -105,9 +105,9 @@ class template {
+ 			$this->error('directory_notfound', dirname(DISCUZ_ROOT.$cachefile));
+ 		}
+ 
+-		$template = preg_replace("/\"(http)?[\w\.\/:]+\?[^\"]+?&[^\"]+?\"/e", "\$this->transamp('\\0')", $template);
+-		$template = preg_replace("/\<script[^\>]*?src=\"(.+?)\"(.*?)\>\s*\<\/script\>/ies", "\$this->stripscriptamp('\\1', '\\2')", $template);
+-		$template = preg_replace("/[\n\r\t]*\{block\s+([a-zA-Z0-9_\[\]]+)\}(.+?)\{\/block\}/ies", "\$this->stripblock('\\1', '\\2')", $template);
++		$template = preg_replace_callback("/\"(http)?[\w\.\/:]+\?[^\"]+?&[^\"]+?\"/", function($matches) { return $this->transamp($matches[0]); }, $template);
++		$template = preg_replace_callback("/\<script[^\>]*?src=\"(.+?)\"(.*?)\>\s*\<\/script\>/is", function($matches) { return $this->stripscriptamp($matches[1], $matches[2]); }, $template);
++		$template = preg_replace_callback("/[\n\r\t]*\{block\s+([a-zA-Z0-9_\[\]]+)\}(.+?)\{\/block\}/is", function($matches) { return $this->stripblock($matches[1], $matches[2]); }, $template);
+ 		$template = preg_replace("/\<\?(\s{1})/is", "<?php\\1", $template);
+ 		$template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?php echo \\1;?>", $template);
+ 
+@@ -226,7 +226,7 @@ class template {
+ 		if(isset($_G['config']['plugindeveloper']) && $_G['config']['plugindeveloper'] == 2) {
+ 			$dev = "echo '<hook>[".($key ? 'array' : 'string')." $hookid".($key ? '/\'.'.$key.'.\'' : '')."]</hook>';";
+ 		}
+-		$key = $key !== '' ? "[$key]" : '';
++		$key = $key != '' ? "[$key]" : '';
+ 		$this->replacecode['replace'][$i] = "<?php {$dev}if(!empty(\$_G['setting']['pluginhooks']['$hookid']$key)) echo \$_G['setting']['pluginhooks']['$hookid']$key;?>";
+ 		return $search;
+ 	}
+@@ -257,7 +257,8 @@ class template {
+ 		$scripts = array(STYLEID.'_common');
+ 		$content = $this->csscurmodules = '';
+ 		$content = @implode('', file(DISCUZ_ROOT.'./data/cache/style_'.STYLEID.'_module.css'));
+-		$content = preg_replace("/\[(.+?)\](.*?)\[end\]/ies", "\$this->cssvtags('\\1','\\2')", $content);
++		$content = preg_replace_callback("/\[(.+?)\](.*?)\[end\]/is", function($matches) { return $this->cssvtags($matches[1], $matches[2]); }, $content);
++
+ 		if($this->csscurmodules) {
+ 			$this->csscurmodules = preg_replace(array('/\s*([,;:\{\}])\s*/', '/[\t\n\r]/', '/\/\*.+?\*\//'), array('\\1', '',''), $this->csscurmodules);
+ 			if(@$fp = fopen(DISCUZ_ROOT.'./data/cache/style_'.STYLEID.'_'.$_G['basescript'].'_'.CURMODULE.'.css', 'w')) {
+@@ -303,8 +304,8 @@ class template {
+ 
+ 
+ 	function stripvtags($expr, $statement = '') {
+-		$expr = str_replace("\\\"", "\"", preg_replace("/\<\?\=(\\\$.+?)\?\>/s", "\\1", $expr));
+-		$statement = str_replace("\\\"", "\"", $statement);
++		$expr = str_replace('\\\"', '\"', preg_replace("/\<\?\=(\\\$.+?)\?\>/s", "\\1", $expr));
++		$statement = str_replace('\\\"', '\"', $statement);
+ 		return $expr.$statement;
+ 	}
+ 
+diff --git a/source/class/helper/helper_mobile.php b/source/class/helper/helper_mobile.php
+index fe3bcf4..39c520f 100644
+--- a/source/class/helper/helper_mobile.php
++++ b/source/class/helper/helper_mobile.php
+@@ -19,7 +19,7 @@ class helper_mobile {
+ 		if(!defined('TPL_DEFAULT')) {
+ 			$content = ob_get_contents();
+ 			ob_end_clean();
+-			$content = preg_replace("/href=\"(\w+\.php)(.*?)\"/e", "mobilereplace('\\1', '\\2')", $content);
++			$content = preg_replace_callback("/href=\"(\w+\.php)(.*?)\"/", function($matches) { return mobilereplace($matches[1], $matches[2]); }, $content);
+ 
+ 			ob_start();
+ 			$content = '<?xml version="1.0" encoding="utf-8"?>'.$content;
+diff --git a/source/class/helper/helper_seo.php b/source/class/helper/helper_seo.php
+index 4d18f3d..08f18c3 100644
+--- a/source/class/helper/helper_seo.php
++++ b/source/class/helper/helper_seo.php
+@@ -91,9 +91,9 @@ class helper_seo {
+ 			}
+ 			if($searcharray && $replacearray) {
+ 				$_G['trunsform_tmp'] = array();
+-				$content = preg_replace("/(<script\s+.*?>.*?<\/script>)|(<a\s+.*?>.*?<\/a>)|(<img\s+.*?[\/]?>)|(\[attach\](\d+)\[\/attach\])/ies", "helper_seo::base64_transform('encode', '<relatedlink>', '\\1\\2\\3\\4', '</relatedlink>')", $content);
++				$content = preg_replace_callback("/(<script\s+.*?>.*?<\/script>)|(<a\s+.*?>.*?<\/a>)|(<img\s+.*?[\/]?>)|(\[attach\](\d+)\[\/attach\])/is", function($matches) { return helper_seo::base64_transform('encode', '<relatedlink>', $matches[1].$matches[2].$matches[3].$matches[4], '</relatedlink>'); }, $content);
+ 				$content = preg_replace($searcharray, $replacearray, $content, 1);
+-				$content = preg_replace("/<relatedlink>(.*?)<\/relatedlink>/ies", "helper_seo::base64_transform('decode', '', '\\1', '')", $content);
++				$content = preg_replace_callback("/<relatedlink>(.*?)<\/relatedlink>/is", function($matches) { return helper_seo::base64_transform('decode', '', $matches[1], ''); }, $content);
+ 			}
+ 		}
+ 		return $content;
+diff --git a/source/class/table/table_forum_postcomment.php b/source/class/table/table_forum_postcomment.php
+index 78a54fc..45c1203 100644
+--- a/source/class/table/table_forum_postcomment.php
++++ b/source/class/table/table_forum_postcomment.php
+@@ -160,7 +160,7 @@ class table_forum_postcomment extends discuz_table
+ 			}
+ 			if($comment['authorid'] == '-1') {
+ 				$cic = 0;
+-				$totalcomment[$comment['pid']] = preg_replace('/<i>([\.\d]+)<\/i>/e', "'<i class=\"cmstarv\" style=\"background-position:20px -'.(intval(\\1) * 16).'px\">'.sprintf('%1.1f', \\1).'</i>'.(\$cic++ % 2 ? '<br />' : '');", $comment['comment']);
++				$totalcomment[$comment['pid']] = preg_replace_callback('/<i>([\.\d]+)<\/i>/', function($matches) use($cic) { return '<i class="cmstarv" style="background-position:20px -'.(intval($matches[1]) * 16).'px">'.sprintf('%1.1f', $matches[1]).'</i>'.($cic++ % 2 ? '<br />' : ''); }, $comment['comment']);
+ 			}
+ 			$postcache[$comment['pid']]['comment']['count'] = $commentcount[$comment['pid']];
+ 			$postcache[$comment['pid']]['comment']['data'] = $comments[$comment['pid']];
+diff --git a/source/class/table/table_forum_thread.php b/source/class/table/table_forum_thread.php
+index 3edbf33..5a33e88 100644
+--- a/source/class/table/table_forum_thread.php
++++ b/source/class/table/table_forum_thread.php
+@@ -496,7 +496,7 @@ class table_forum_thread extends discuz_table
+ 				}
+ 			}
+ 		}
+-		if(!defined('IN_MOBILE') && $defult && $conditions['sticky'] == 4 && $start == 0 && $limit && strtolower(preg_replace("/\s?/ies", '', $order)) == 'displayorderdesc,lastpostdesc' && empty($sort)) {
++		if(!defined('IN_MOBILE') && $defult && $conditions['sticky'] == 4 && $start == 0 && $limit && strtolower(preg_replace_callback("/\s?/is", function($matches) { return ''; }, $order)) == 'displayorderdesc,lastpostdesc' && empty($sort)) {
+ 			foreach($conditions['displayorder'] as $id) {
+ 				if($id < 2) {
+ 					$firstpage = true;
+diff --git a/source/function/cache/cache_setting.php b/source/function/cache/cache_setting.php
+index cd15026..e2e10ce 100644
+--- a/source/function/cache/cache_setting.php
++++ b/source/function/cache/cache_setting.php
+@@ -271,8 +271,8 @@ function build_cache_setting() {
+ 			} else {
+ 				$data['watermarktext']['fontpath'][$k] = 'static/image/seccode/font/'.$data['watermarktext']['fontpath'][$k];
+ 			}
+-			$data['watermarktext']['color'][$k] = preg_replace('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/e', "hexdec('\\1').','.hexdec('\\2').','.hexdec('\\3')", $data['watermarktext']['color'][$k]);
+-			$data['watermarktext']['shadowcolor'][$k] = preg_replace('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/e', "hexdec('\\1').','.hexdec('\\2').','.hexdec('\\3')", $data['watermarktext']['shadowcolor'][$k]);
++			$data['watermarktext']['color'][$k] = preg_replace_callback('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/', function($matches) { return hexdec($matches[1]).','.hexdec($matches[2]).','.hexdec($matches[3]); }, $data['watermarktext']['color'][$k]);
++			$data['watermarktext']['shadowcolor'][$k] = preg_replace_callback('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/', function($matches) { return hexdec($matches[1]).','.hexdec($matches[2]).','.hexdec($matches[3]); }, $data['watermarktext']['shadowcolor'][$k]);
+ 		} else {
+ 			$data['watermarktext']['text'][$k] = '';
+ 			$data['watermarktext']['fontpath'][$k] = '';
+@@ -993,7 +993,7 @@ function get_cachedata_threadprofile() {
+ 	}
+ 	foreach($data['template'] as $id => $template) {
+ 		foreach($template as $type => $row) {
+-			$data['template'][$id][$type] = preg_replace('/\{([\w:]+)(=([^}]+?))?\}(([^}]+?)\{\*\}([^}]+?)\{\/\\1\})?/es', "get_cachedata_threadprofile_nodeparse(\$id, \$type, '\\1', '\\5', '\\6', '\\3')", $template[$type]);
++			$data['template'][$id][$type] = preg_replace_callback('/\{([\w:]+)(=([^}]+?))?\}(([^}]+?)\{\*\}([^}]+?)\{\/\\1\})?/s', function($matches) use($id, $type) { return get_cachedata_threadprofile_nodeparse($id, $type, $matches[1], $matches[5], $matches[6], $matches[3]); }, $template[$type]);
+ 		}
+ 	}
+ 	$data['code'] = $_G['cachedata_threadprofile_code'];
+diff --git a/source/function/cache/cache_styles.php b/source/function/cache/cache_styles.php
+index 1170807..27240f0 100644
+--- a/source/function/cache/cache_styles.php
++++ b/source/function/cache/cache_styles.php
+@@ -117,7 +117,7 @@ function writetocsscache($data) {
+ 					}
+ 				}
+ 			}
+-			$cssdata = preg_replace("/\{([A-Z0-9]+)\}/e", '\$data[strtolower(\'\1\')]', $cssdata);
++			$cssdata = preg_replace_callback("/\{([A-Z0-9]+)\}/", function($matches) use($data) { return $data[strtolower($matches[1])]; }, $cssdata);
+ 			$cssdata = preg_replace("/<\?.+?\?>\s*/", '', $cssdata);
+ 			$cssdata = !preg_match('/^http:\/\//i', $data['styleimgdir']) ? preg_replace("/url\(([\"'])?".preg_quote($data['styleimgdir'], '/')."/i", "url(\\1$_G[siteurl]$data[styleimgdir]", $cssdata) : $cssdata;
+ 			$cssdata = !preg_match('/^http:\/\//i', $data['imgdir']) ? preg_replace("/url\(([\"'])?".preg_quote($data['imgdir'], '/')."/i", "url(\\1$_G[siteurl]$data[imgdir]", $cssdata) : $cssdata;
+diff --git a/source/function/function_blog.php b/source/function/function_blog.php
+index 4011f3c..df4e59e 100644
+--- a/source/function/function_blog.php
++++ b/source/function/function_blog.php
+@@ -71,13 +71,8 @@ function blog_post($POST, $olds=array()) {
+ 	} else {
+ 		$POST['message'] = getstr($POST['message'], 0, 0, 0, 0, 1);
+ 		$POST['message'] = censor($POST['message']);
+-		$POST['message'] = preg_replace(array(
+-			"/\<div\>\<\/div\>/i",
+-			"/\<a\s+href\=\"([^\>]+?)\"\>/ie"
+-		), array(
+-			'',
+-			'blog_check_url(\'\\1\')'
+-		), $POST['message']);
++		$POST['message'] = preg_replace("/\<div\>\<\/div\>/i", '', $POST['message']);
++		$POST['message'] = preg_replace_callback("/\<a\s+href\=\"([^\>]+?)\"\>/i", function($matches) { return blog_check_url($matches[1]); }, $POST['message']);
+ 	}
+ 	$message = $POST['message'];
+ 	if(censormod($message) || censormod($POST['subject']) || $_G['group']['allowblogmod']) {
+@@ -313,7 +308,7 @@ function checkhtml($html) {
+ }
+ 
+ function blog_bbcode($message) {
+-	$message = preg_replace("/\[flash\=?(media|real|mp3)*\](.+?)\[\/flash\]/ie", "blog_flash('\\2', '\\1')", $message);
++	$message = preg_replace_callback("/\[flash\=?(media|real|mp3)*\](.+?)\[\/flash\]/i", function($matches) { return blog_flash($matches[2], $matches[1]); }, $message);
+ 	return $message;
+ }
+ function blog_flash($swf_url, $type='') {
+diff --git a/source/function/function_core.php b/source/function/function_core.php
+index 0ce29fd..de463d6 100644
+--- a/source/function/function_core.php
++++ b/source/function/function_core.php
+@@ -518,7 +518,6 @@ function checktplrefresh($maintpl, $subtpl, $timecompare, $templateid, $cachefil
+ 
+ function template($file, $templateid = 0, $tpldir = '', $gettplfile = 0, $primaltpl='') {
+ 	global $_G;
+-
+ 	static $_init_style = false;
+ 	if($_init_style === false) {
+ 		C::app()->_init_style();
+@@ -637,6 +636,7 @@ function template($file, $templateid = 0, $tpldir = '', $gettplfile = 0, $primal
+ 	if($gettplfile) {
+ 		return $tplfile;
+ 	}
++
+ 	checktplrefresh($tplfile, $tplfile, @filemtime(DISCUZ_ROOT.$cachefile), $templateid, $cachefile, $tpldir, $file);
+ 	return DISCUZ_ROOT.$cachefile;
+ }
+@@ -1164,7 +1164,7 @@ function hookscript($script, $hscript, $type = 'funcs', $param = array(), $func
+ 					if(!method_exists($pluginclasses[$classkey], $hookfunc[1])) {
+ 						continue;
+ 					}
+-					$return = $pluginclasses[$classkey]->$hookfunc[1]($param);
++					$return = call_user_func(array($pluginclasses[$classkey], $hookfunc[1]), $param);
+ 
+ 					if(substr($hookkey, -7) == '_extend' && !empty($_G['setting']['pluginhooks'][$hookkey])) {
+ 						continue;
+@@ -2093,4 +2093,4 @@ function currentlang() {
+ }
+ 
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/source/function/function_discuzcode.php b/source/function/function_discuzcode.php
+index 539931a..39aecca 100644
+--- a/source/function/function_discuzcode.php
++++ b/source/function/function_discuzcode.php
+@@ -78,18 +78,18 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 
+ 	if($pid && strpos($message, '[/password]') !== FALSE) {
+ 		if($authorid != $_G['uid'] && !$_G['forum']['ismoderator']) {
+-			$message = preg_replace("/\s?\[password\](.+?)\[\/password\]\s?/ie", "parsepassword('\\1', \$pid)", $message);
++			$message = preg_replace_callback("/\s?\[password\](.+?)\[\/password\]\s?/i", function($matches) use($pid) { return parsepassword($matches[1], $pid); }, $message);
+ 			if($_G['forum_discuzcode']['passwordlock'][$pid]) {
+ 				return '';
+ 			}
+ 		} else {
+-			$message = preg_replace("/\s?\[password\](.+?)\[\/password\]\s?/ie", "", $message);
++			$message = preg_replace_callback("/\s?\[password\](.+?)\[\/password\]\s?/i", function($matches) { return ''; }, $message);
+ 			$_G['forum_discuzcode']['passwordauthor'][$pid] = 1;
+ 		}
+ 	}
+ 
+ 	if($parsetype != 1 && !$bbcodeoff && $allowbbcode && (strpos($message, '[/code]') || strpos($message, '[/CODE]')) !== FALSE) {
+-		$message = preg_replace("/\s?\[code\](.+?)\[\/code\]\s?/ies", "codedisp('\\1')", $message);
++		$message = preg_replace_callback("/\s?\[code\](.+?)\[\/code\]\s?/is", function($matches) { return codedisp($matches[1]); }, $message);
+ 	}
+ 
+ 	$msglower = strtolower($message);
+@@ -113,26 +113,26 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 	}
+ 
+ 	if($_G['setting']['allowattachurl'] && strpos($msglower, 'attach://') !== FALSE) {
+-		$message = preg_replace("/attach:\/\/(\d+)\.?(\w*)/ie", "parseattachurl('\\1', '\\2', 1)", $message);
++		$message = preg_replace_callback("/attach:\/\/(\d+)\.?(\w*)/i", function($matches) { return parseattachurl($matches[1], $matches[2], 1); }, $message);
+ 	}
+ 
+ 	if($allowbbcode) {
+ 		if(strpos($msglower, 'ed2k://') !== FALSE) {
+-			$message = preg_replace("/ed2k:\/\/(.+?)\//e", "parseed2k('\\1')", $message);
++			$message = preg_replace_callback("/ed2k:\/\/(.+?)\//", function($matches) { return parseed2k($matches[1]); }, $message);
+ 		}
+ 	}
+ 
+ 	if(!$bbcodeoff && $allowbbcode) {
+ 		if(strpos($msglower, '[/url]') !== FALSE) {
+-			$message = preg_replace("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/ies", "parseurl('\\1', '\\5', '\\2')", $message);
++			$message = preg_replace_callback("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/is", function($matches) { return parseurl($matches[1], $matches[5], $matches[2]); }, $message);
+ 		}
+ 		if(strpos($msglower, '[/email]') !== FALSE) {
+-			$message = preg_replace("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/ies", "parseemail('\\1', '\\4')", $message);
++			$message = preg_replace_callback("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/is", function($matches) { return parseemail($matches[1], $matches[4]); }, $message);
+ 		}
+ 
+ 		$nest = 0;
+ 		while(strpos($msglower, '[table') !== FALSE && strpos($msglower, '[/table]') !== FALSE){
+-			$message = preg_replace("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/ies", "parsetable('\\1', '\\2', '\\3')", $message);
++			$message = preg_replace_callback("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/is", function($matches) { return parsetable($matches[1], $matches[2], $matches[3]); }, $message);
+ 			if(++$nest > 4) break;
+ 		}
+ 
+@@ -172,7 +172,7 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 			), $message));
+ 
+ 		if($pid && !defined('IN_MOBILE')) {
+-			$message = preg_replace("/\s?\[postbg\]\s*([^\[\<\r\n;'\"\?\(\)]+?)\s*\[\/postbg\]\s?/ies", "parsepostbg('\\1', '$pid')", $message);
++			$message = preg_replace_callback("/\s?\[postbg\]\s*([^\[\<\r\n;'\"\?\(\)]+?)\s*\[\/postbg\]\s?/is", function($matches) use($pid) { return parsepostbg($matches[1], $pid); }, $message);
+ 		} else {
+ 			$message = preg_replace("/\s?\[postbg\]\s*([^\[\<\r\n;'\"\?\(\)]+?)\s*\[\/postbg\]\s?/is", "", $message);
+ 		}
+@@ -187,13 +187,13 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 		}
+ 		if(!defined('IN_MOBILE')) {
+ 			if(strpos($msglower, '[/media]') !== FALSE) {
+-				$message = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", $allowmediacode ? "parsemedia('\\1', '\\2')" : "bbcodeurl('\\2', '<a href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
++				$message = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) use($allowmediacode) { return $allowmediacode ? parsemedia($matches[1], $matches[2]) : bbcodeurl($matches[2], '<a href="{url}" target="_blank">{url}</a>'); }, $message);
+ 			}
+ 			if(strpos($msglower, '[/audio]') !== FALSE) {
+-				$message = preg_replace("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/ies", $allowmediacode ? "parseaudio('\\2', 400)" : "bbcodeurl('\\2', '<a href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
++				$message = preg_replace_callback("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/is", function($matches) use($allowmediacode) { return $allowmediacode ? parseaudio($matches[2], 400) : bbcodeurl($matches[2], '<a href="{url}" target="_blank">{url}</a>'); }, $message);
+ 			}
+ 			if(strpos($msglower, '[/flash]') !== FALSE) {
+-				$message = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", $allowmediacode ? "parseflash('\\2', '\\3', '\\4');" : "bbcodeurl('\\4', '<a href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
++				$message = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) use($allowmediacode) { return $allowmediacode ? parseflash($matches[2], $matches[3], $matches[4]) : bbcodeurl($matches[4], '<a href="{url}" target="_blank">{url}</a>'); }, $message);
+ 			}
+ 		} else {
+ 			if(strpos($msglower, '[/media]') !== FALSE) {
+@@ -216,7 +216,7 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 				$msglower = strtolower($message);
+ 			}
+ 			if(strpos($msglower, '[hide=d') !== FALSE) {
+-				$message = preg_replace("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/ies", "expirehide('\\1','\\2','\\3', $pdateline)", $message);
++				$message = preg_replace_callback("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/is", function($matches) use($pdateline) { return expirehide($matches[1], $matches[2], $matches[3], $pdateline); }, $message);
+ 				$msglower = strtolower($message);
+ 			}
+ 			if(strpos($msglower, '[hide]') !== FALSE) {
+@@ -238,14 +238,14 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 				}
+ 			}
+ 			if(strpos($msglower, '[hide=') !== FALSE) {
+-				$message = preg_replace("/\[hide=(\d+)\]\s*(.*?)\s*\[\/hide\]/ies", "creditshide(\\1,'\\2', $pid, $authorid)", $message);
++				$message = preg_replace_callback("/\[hide=(\d+)\]\s*(.*?)\s*\[\/hide\]/is", function($matches) use($pid, $authorid) { return creditshide($matches[1], $matches[2], $pid, $authorid); }, $message);
+ 			}
+ 		}
+ 	}
+ 
+ 	if(!$bbcodeoff) {
+ 		if($parsetype != 1 && strpos($msglower, '[swf]') !== FALSE) {
+-			$message = preg_replace("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/ies", "bbcodeurl('\\1', ' <img src=\"'.STATICURL.'image/filetype/flash.gif\" align=\"absmiddle\" alt=\"\" /> <a href=\"{url}\" target=\"_blank\">Flash: {url}</a> ')", $message);
++			$message = preg_replace_callback("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/is", function($matches) { return bbcodeurl($matches[1], ' <img src="'.STATICURL.'image/filetype/flash.gif" align="absmiddle" alt="" /> <a href="{url}" target="_blank">Flash: {url}</a> '); }, $message);
+ 		}
+ 
+ 		if(defined('IN_MOBILE') && !defined('TPL_DEFAULT') && !defined('IN_MOBILE_API')) {
+@@ -253,16 +253,8 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 		}
+ 		$attrsrc = !IS_ROBOT && $lazyload ? 'file' : 'src';
+ 		if(strpos($msglower, '[/img]') !== FALSE) {
+-			$message = preg_replace(array(
+-				"/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies",
+-				"/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies"
+-			), $allowimgcode ? array(
+-				"parseimg(0, 0, '\\1', ".intval($lazyload).", ".intval($pid).", 'onmouseover=\"img_onmouseoverfunc(this)\" ".($lazyload ? "lazyloadthumb=\"1\"" : "onload=\"thumbImg(this)\"")."')",
+-				"parseimg('\\1', '\\2', '\\3', ".intval($lazyload).", ".intval($pid).")"
+-			) : ($allowbbcode ? array(
+-				(!defined('IN_MOBILE') ? "bbcodeurl('\\1', '<a href=\"{url}\" target=\"_blank\">{url}</a>')" : "bbcodeurl('\\1', '')"),
+-				(!defined('IN_MOBILE') ? "bbcodeurl('\\3', '<a href=\"{url}\" target=\"_blank\">{url}</a>')" : "bbcodeurl('\\3', '')"),
+-			) : array("bbcodeurl('\\1', '{url}')", "bbcodeurl('\\3', '{url}')")), $message);
++			$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimgcode, $lazyload, $pid, $allowbbcode) { return $allowimgcode ? parseimg(0, 0, $matches[1], intval($lazyload), intval($pid), 'onmouseover="img_onmouseoverfunc(this)" '.($lazyload ? 'lazyloadthumb="1"' : 'onload="thumbImg(this)"')) : ($allowbbcode ? (!defined('IN_MOBILE') ? bbcodeurl($matches[1], '<a href="{url}" target="_blank">{url}</a>') : bbcodeurl($matches[1], '')) : bbcodeurl($matches[1], '{url}')); }, $message);
++			$message = preg_replace_callback("/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimgcode, $lazyload, $pid, $allowbbcode) { return $allowimgcode ? parseimg($matches[1], $matches[2], $matches[3], intval($lazyload), intval($pid)) : ($allowbbcode ? (!defined('IN_MOBILE') ? bbcodeurl($matches[3], '<a href="{url}" target="_blank">{url}</a>') : bbcodeurl($matches[3], '')) : bbcodeurl($matches[3], '{url}')); }, $message);
+ 		}
+ 	}
+ 
+@@ -273,7 +265,7 @@ function discuzcode($message, $smileyoff, $bbcodeoff, $htmlon = 0, $allowsmilies
+ 	unset($msglower);
+ 
+ 	if($jammer) {
+-		$message = preg_replace("/\r\n|\n|\r/e", "jammer()", $message);
++		$message = preg_replace_callback("/\r\n|\n|\r/", function($matches) { return jammer(); }, $message);
+ 	}
+ 	if($first) {
+ 		if(helper_access::check_module('group')) {
+@@ -368,23 +360,15 @@ function parsetable($width, $bgcolor, $message) {
+ 			$width = intval($width);
+ 			$width = $width ? ($width <= 560 ? $width.'px' : '98%') : '';
+ 		}
++		$message = preg_replace("/\[\/td\]\s*\[\/tr\]\s*/i", '</td></tr>', $message);
++		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return parsetrtd($matches[1], 0, 0, $matches[2]); }, $message);
++		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return parsetrtd('td', 0, 0, $matches[1]); }, $message);
++		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return parsetrtd($matches[1], $matches[2], $matches[3], $matches[4]); }, $message);
++		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return parsetrtd('td', $matches[1], $matches[2], $matches[3]); }, $message);
+ 		return (!defined('IN_MOBILE') ? '<table cellspacing="0" class="t_table" '.
+ 			($width == '' ? NULL : 'style="width:'.$width.'"').
+ 			($bgcolor ? ' bgcolor="'.$bgcolor.'">' : '>') : '<table>').
+-			str_replace('\\"', '"', preg_replace(array(
+-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
+-					"/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
+-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
+-					"/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
+-					"/\[\/td\]\s*\[\/tr\]\s*/i"
+-				), array(
+-					"parsetrtd('\\1', '0', '0', '\\2')",
+-					"parsetrtd('td', '0', '0', '\\1')",
+-					"parsetrtd('\\1', '\\2', '\\3', '\\4')",
+-					"parsetrtd('td', '\\1', '\\2', '\\3')",
+-					'</td></tr>'
+-				), $message)
+-			).'</table>';
++			str_replace('\\"', '"', $message).'</table>';
+ 	}
+ }
+ 
+diff --git a/source/function/function_editor.php b/source/function/function_editor.php
+index 69cadf5..11c67b3 100644
+--- a/source/function/function_editor.php
++++ b/source/function/function_editor.php
+@@ -115,18 +115,13 @@ function html2bbcode($text) {
+ 		"/<script.*>.*<\/script>/siU",
+ 		'/on(mousewheel|mouseover|click|load|onload|submit|focus|blur)="[^"]*"/i',
+ 		"/(\r\n|\n|\r)/",
+-		"/<table([^>]*(width|background|background-color|bgcolor)[^>]*)>/siUe",
+ 		"/<table.*>/siU",
+ 		"/<tr.*>/siU",
+ 		"/<td>/i",
+-		"/<td(.+)>/siUe",
+ 		"/<\/td>/i",
+ 		"/<\/tr>/i",
+ 		"/<\/table>/i",
+-		'/<h([0-9]+)[^>]*>/siUe',
+ 		'/<\/h([0-9]+)>/siU',
+-		"/<img[^>]+smilieid=\"(\d+)\".*>/esiU",
+-		"/<img([^>]*src[^>]*)>/eiU",
+ 		"/<a\s+?name=.+?\".\">(.+?)<\/a>/is",
+ 		"/<br.*>/siU",
+ 		"/<span\s+?style=\"float:\s+(left|right);\">(.+?)<\/span>/is",
+@@ -135,23 +130,23 @@ function html2bbcode($text) {
+ 		'',
+ 		'',
+ 		'',
+-		"tabletag('\\1')",
+ 		'[table]',
+ 		'[tr]',
+ 		'[td]',
+-		"tdtag('\\1')",
+ 		'[/td]',
+ 		'[/tr]',
+ 		'[/table]',
+-		"\"[size=\".(7 - \\1).\"]\"",
+ 		"[/size]\n\n",
+-		"smileycode('\\1')",
+-		"imgtag('\\1')",
+ 		'\1',
+ 		"\n",
+ 		"[float=\\1]\\2[/float]",
+ 	);
+ 	$text = preg_replace($pregfind, $pregreplace, $text);
++	$text = preg_replace_callback("/<table([^>]*(width|background|background-color|bgcolor)[^>]*)>/siU", function($matches) { return tabletag($matches[1]); }, $text);
++	$text = preg_replace_callback("/<td(.+)>/siU", function($matches) { return tdtag($matches[1]); }, $text);
++	$text = preg_replace_callback('/<h([0-9]+)[^>]*>/siU', function($matches) { return '[size='.(7 - $matches[1]).']'; }, $text);
++	$text = preg_replace_callback("/<img[^>]+smilieid=\"(\d+)\".*>/siU", function($matches) { return smileycode($matches[1]); }, $text);
++	$text = preg_replace_callback("/<img([^>]*src[^>]*)>/iU", function($matches) { return imgtag($matches[1]); }, $text);
+ 
+ 	$text = recursion('b', $text, 'simpletag', 'b');
+ 	$text = recursion('strong', $text, 'simpletag', 'b');
+@@ -236,11 +231,7 @@ function parsestyle($tagoptions, &$prependtags, &$appendtags) {
+ 	);
+ 
+ 	$style = getoptionvalue('style', $tagoptions);
+-	$style = preg_replace(
+-		"/(?<![a-z0-9-])color:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)(;?)/ie",
+-		'sprintf("color: #%02X%02X%02X$4", $1, $2, $3)',
+-		$style
+-	);
++	$style = preg_replace_callback("/(?<![a-z0-9-])color:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)(;?)/i", function($matches) { return sprintf("color: #%02X%02X%02X".$matches[4], $matches[1], $matches[2], $matches[3]); }, $style);
+ 	foreach($searchlist as $searchtag) {
+ 		if(preg_match('/'.$searchtag['regex'].'/i', $style, $match)) {
+ 			$opnvalue = $match["$searchtag[match]"];
+diff --git a/source/function/function_followcode.php b/source/function/function_followcode.php
+index 3923ee4..9045602 100644
+--- a/source/function/function_followcode.php
++++ b/source/function/function_followcode.php
+@@ -29,7 +29,7 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
+ 	$message = messagesafeclear($message);
+ 
+ 	if((strpos($message, '[/code]') || strpos($message, '[/CODE]')) !== FALSE) {
+-		$message = preg_replace("/\s?\[code\](.+?)\[\/code\]\s?/ies", "", $message);
++		$message = preg_replace_callback("/\s?\[code\](.+?)\[\/code\]\s?/is", function($matches) { return ''; }, $message);
+ 	}
+ 
+ 	$msglower = strtolower($message);
+@@ -47,11 +47,11 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
+ 	$message = fparsesmiles($message);
+ 
+ 	if(strpos($msglower, 'attach://') !== FALSE) {
+-		$message = preg_replace("/attach:\/\/(\d+)\.?(\w*)/ie", '', $message);
++		$message = preg_replace_callback("/attach:\/\/(\d+)\.?(\w*)/i", function($matches) { return ''; }, $message);
+ 	}
+ 
+ 	if(strpos($msglower, 'ed2k://') !== FALSE) {
+-		$message = preg_replace("/ed2k:\/\/(.+?)\//e", '', $message);
++		$message = preg_replace_callback("/ed2k:\/\/(.+?)\//", function($matches) { return ''; }, $message);
+ 	}
+ 	if(strpos($msglower, '[/i]') !== FALSE) {
+ 		$message = preg_replace("/\s*\[i=s\][\n\r]*(.+?)[\n\r]*\[\/i\]\s*/is", '', $message);
+@@ -91,40 +91,40 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
+ 		$message = preg_replace($_G['cache']['bbcodes'][-$allowbbcode]['searcharray'], '', $message);
+ 	}
+ 	if(strpos($msglower, '[/hide]') !== FALSE) {
+-		preg_replace("/\[hide.*?\]\s*(.*?)\s*\[\/hide\]/ies", "hideattach('\\1')", $message);
++		preg_replace_callback("/\[hide.*?\]\s*(.*?)\s*\[\/hide\]/is", function($matches) { return hideattach($matches[1]); }, $message);
+ 		if(strpos($msglower, '[hide]') !== FALSE) {
+ 			$message = preg_replace("/\[hide\]\s*(.*?)\s*\[\/hide\]/is", '', $message);
+ 		}
+ 		if(strpos($msglower, '[hide=') !== FALSE) {
+-			$message = preg_replace("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/ies", '', $message);
++			$message = preg_replace_callback("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/is", function($matches) { return ''; }, $message);
+ 		}
+ 	}
+ 
+ 	if(strpos($msglower, '[/url]') !== FALSE) {
+-		$message = preg_replace("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/ies", "fparseurl('\\1', '\\5', '\\2')", $message);
++		$message = preg_replace_callback("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/is", function($matches) { return fparseurl($matches[1], $matches[5], $matches[2]); }, $message);
+ 	}
+ 	if(strpos($msglower, '[/email]') !== FALSE) {
+-		$message = preg_replace("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/ies", "fparseemail('\\1', '\\4')", $message);
++		$message = preg_replace_callback("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/is", function($matches) { return fparseemail($matches[1], $matches[4]); }, $message);
+ 	}
+ 
+ 	$nest = 0;
+ 	while(strpos($msglower, '[table') !== FALSE && strpos($msglower, '[/table]') !== FALSE){
+-		$message = preg_replace("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/ies", "fparsetable('\\1', '\\2', '\\3')", $message);
++		$message = preg_replace_callback("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/is", function($matches) { return fparsetable($matches[1], $matches[2], $matches[3]); }, $message);
+ 		if(++$nest > 4) break;
+ 	}
+ 
+ 	if(strpos($msglower, '[/media]') !== FALSE) {
+-		$message = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", "fparsemedia('\\1', '\\2')", $message);
++		$message = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) { return fparsemedia($matches[1], $matches[2]); }, $message);
+ 	}
+ 	if(strpos($msglower, '[/audio]') !== FALSE) {
+-		$message = preg_replace("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/ies", "fparseaudio('\\2')", $message);
++		$message = preg_replace_callback("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/is", function($matches) { return fparseaudio($matches[2]); }, $message);
+ 	}
+ 	if(strpos($msglower, '[/flash]') !== FALSE) {
+-		$message = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", "fparseflash('\\4');", $message);
++		$message = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) { return fparseflash($matches[4]); }, $message);
+ 	}
+ 
+ 	if($parsetype != 1 && strpos($msglower, '[swf]') !== FALSE) {
+-		$message = preg_replace("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/ies", "bbcodeurl('\\1', ' <img src=\"'.STATICURL.'image/filetype/flash.gif\" align=\"absmiddle\" alt=\"\" /> <a href=\"{url}\" target=\"_blank\">Flash: {url}</a> ')", $message);
++		$message = preg_replace_callback("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/is", function($matches) { return bbcodeurl($matches[1], ' <img src="'.STATICURL.'image/filetype/flash.gif" align="absmiddle" alt="" /> <a href="{url}" target="_blank">Flash: {url}</a> '); }, $message);
+ 	}
+ 	$flag = $length ? 1 : 0;
+ 	if($tid) {
+@@ -132,13 +132,8 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
+ 	}
+ 
+ 	if(strpos($msglower, '[/img]') !== FALSE) {
+-		$message = preg_replace(array(
+-			"/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies",
+-			"/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies"
+-		), $allowimg ? array(
+-			"fparseimg('\\1', '$extra')",
+-			"fparseimg('\\3', '$extra')"
+-		) : '', $message);
++		$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimg, $extra) { return $allowimg ? fparseimg($matches[1], $extra) : ''; }, $message);
++		$message = preg_replace_callback("/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimg, $extra) { return $allowimg ? fparseimg($matches[3], $extra) : ''; }, $message);
+ 	}
+ 
+ 	if($tid && $pid) {
+@@ -153,7 +148,7 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
+ 	}
+ 
+ 	if(strpos($msglower, '[/attach]') !== FALSE) {
+-		$message = preg_replace("/\[attach\]\s*([^\[\<\r\n]+?)\s*\[\/attach\]/ies", '', $message);
++		$message = preg_replace_callback("/\[attach\]\s*([^\[\<\r\n]+?)\s*\[\/attach\]/is", function($matches) { return ''; }, $message);
+ 	}
+ 	$message = clearnl($message);
+ 
+@@ -198,7 +193,8 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
+ 			$specialextra = substr($message, $sppos + 3);
+ 			$message = substr($message, 0, $sppos);
+ 		}
+-		$message = preg_replace(array("/(^|>)([^<]+)(?=<|$)/sUe", "/<highlight>(.*)<\/highlight>/siU"), array("highlightword('\\2', \$highlightarray, '\\1')", "<strong><font color=\"#FF0000\">\\1</font></strong>"), $message);
++		$message = preg_replace("/<highlight>(.*)<\/highlight>/siU", "<strong><font color=\"#FF0000\">\\1</font></strong>", $message);
++		$message = preg_replace_callback("/(^|>)([^<]+)(?=<|$)/sU", function($matches) use($highlightarray) { return highlightword($matches[2], $highlightarray, $matches[1]); }, $message);
+ 		if($sppos !== FALSE) {
+ 			$message = $message.chr(0).chr(0).chr(0).$specialextra;
+ 		}
+@@ -361,22 +357,14 @@ function fparsetable($width, $bgcolor, $message) {
+ 			$width = intval($width);
+ 			$width = $width ? ($width <= 560 ? $width.'px' : '98%') : '';
+ 		}
++		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return parsetrtd($matches[1], 0, 0, $matches[2]); }, $message);
++		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return parsetrtd('td', 0, 0, $matches[1]); }, $message);
++		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return parsetrtd($matches[1], $matches[2], $matches[3], $matches[4]); }, $message);
++		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return parsetrtd('td', $matches[1], $matches[2], $matches[3]); }, $message);
+ 		$html = '<table cellspacing="0" class="t_table" '.
+ 			($width == '' ? NULL : 'style="width:'.$width.'"').
+ 			($bgcolor ? ' bgcolor="'.$bgcolor.'">' : '>').
+-			str_replace('\\"', '"', preg_replace(array(
+-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
+-					"/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
+-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
+-					"/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
+-					"/\[\/td\]\s*\[\/tr\]\s*/i"
+-				), array(
+-					"parsetrtd('\\1', '0', '0', '\\2')",
+-					"parsetrtd('td', '0', '0', '\\1')",
+-					"parsetrtd('\\1', '\\2', '\\3', '\\4')",
+-					"parsetrtd('td', '\\1', '\\2', '\\3')",
+-					'</td></tr>'
+-				), $message)
++			str_replace('\\"', '"', preg_replace("/\[\/td\]\s*\[\/tr\]\s*/i", '</td></tr>', $message)
+ 			).'</table>';
+ 	}
+ 	return fcodedisp($html);
+diff --git a/source/function/function_forum.php b/source/function/function_forum.php
+index 44be509..a8af63e 100644
+--- a/source/function/function_forum.php
++++ b/source/function/function_forum.php
+@@ -94,7 +94,7 @@ function formulaperm($formula) {
+ 		foreach($a[1] as $field) {
+ 			switch($field) {
+ 				case 'regdate':
+-					$formula = preg_replace("/\{(\d{4})\-(\d{1,2})\-(\d{1,2})\}/e", "'\'\\1-'.sprintf('%02d', '\\2').'-'.sprintf('%02d', '\\3').'\''", $formula);
++					$formula = preg_replace_callback("/\{(\d{4})\-(\d{1,2})\-(\d{1,2})\}/", function($matches) { return '\''.$matches[1].'-'.sprintf('%02d', $matches[2]).'-'.sprintf('%02d', $matches[3]).'\''; }, $formula);
+ 				case 'regday':
+ 					break;
+ 				case 'regip':
+@@ -197,7 +197,7 @@ function medalformulaperm($formula, $type) {
+ 		foreach($a[1] as $field) {
+ 			switch($field) {
+ 				case 'regdate':
+-					$formula = preg_replace("/\{(\d{4})\-(\d{1,2})\-(\d{1,2})\}/e", "'\'\\1-'.sprintf('%02d', '\\2').'-'.sprintf('%02d', '\\3').'\''", $formula);
++					$formula = preg_replace_callback("/\{(\d{4})\-(\d{1,2})\-(\d{1,2})\}/", function($matches) { return '\''.$matches[1].'-'.sprintf('%02d', $matches[2]).'-'.sprintf('%02d', $matches[3]).'\''; }, $formula);
+ 				case 'regday':
+ 					break;
+ 				case 'regip':
+diff --git a/source/function/function_search.php b/source/function/function_search.php
+index ea6f20c..a6cc6c6 100644
+--- a/source/function/function_search.php
++++ b/source/function/function_search.php
+@@ -52,7 +52,8 @@ function bat_highlight($message, $words, $color = '#ff0000') {
+ 			$specialextra = substr($message, $sppos + 3);
+ 			$message = substr($message, 0, $sppos);
+ 		}
+-		$message = preg_replace(array("/(^|>)([^<]+)(?=<|$)/sUe", "/<highlight>(.*)<\/highlight>/siU"), array("highlight('\\2', \$highlightarray, '\\1')", "<strong><font color=\"$color\">\\1</font></strong>"), $message);
++		$message = preg_replace("/<highlight>(.*)<\/highlight>/siU", "<strong><font color=\"$color\">\\1</font></strong>", $message);
++		$message = preg_replace_callback("/(^|>)([^<]+)(?=<|$)/sU", function($matches) use($highlightarray) { return highlight($matches[2], $highlightarray, $matches[1]); }, $message);
+ 		if($sppos !== FALSE) {
+ 			$message = $message.chr(0).chr(0).chr(0).$specialextra;
+ 		}
+diff --git a/source/include/portalcp/portalcp_article.php b/source/include/portalcp/portalcp_article.php
+index f7bbf55..980196d 100644
+--- a/source/include/portalcp/portalcp_article.php
++++ b/source/include/portalcp/portalcp_article.php
+@@ -673,13 +673,13 @@ function portalcp_get_postmessage($post, $getauthorall = '') {
+ 
+ 	$msglower = strtolower($post['message']);
+ 	if(strpos($msglower, '[/media]') !== FALSE) {
+-		$post['message'] = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", "parsearticlemedia('\\1', '\\2')", $post['message']);
++		$post['message'] = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) { return parsearticlemedia($matches[1], $matches[2]); }, $post['message']);
+ 	}
+ 	if(strpos($msglower, '[/audio]') !== FALSE) {
+-		$post['message'] = preg_replace("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/ies", "parsearticlemedia('mid,0,0', '\\2')", $post['message']);
++		$post['message'] = preg_replace_callback("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/is", function($matches) { return parsearticlemedia('mid,0,0', $matches[2]); }, $post['message']);
+ 	}
+ 	if(strpos($msglower, '[/flash]') !== FALSE) {
+-		$post['message'] = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", "parsearticlemedia('swf,0,0', '\\4');", $post['message']);
++		$post['message'] = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) { return parsearticlemedia('swf,0,0', $matches[4]); }, $post['message']);
+ 	}
+ 
+ 	$post['message'] = discuzcode($post['message'], $post['smileyoff'], $post['bbcodeoff'], $post['htmlon'] & 1, $forum['allowsmilies'], $forum['allowbbcode'], ($forum['allowimgcode'] && $_G['setting']['showimages'] ? 1 : 0), $forum['allowhtml'], 0, 0, $post['authorid'], $forum['allowmediacode'], $post['pid']);
+diff --git a/source/module/forum/forum_ajax.php b/source/module/forum/forum_ajax.php
+index ee913d7..ce0f2ae 100644
+--- a/source/module/forum/forum_ajax.php
++++ b/source/module/forum/forum_ajax.php
+@@ -530,8 +530,8 @@ EOF;
+ 					unset($list[$pid]);
+ 				} else {
+ 					$post['message'] = preg_replace($_G['cache']['smilies']['searcharray'], '', $post['message']);
+-					$post['message'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '', $post['message']);
+-					$list[$pid]['message'] = cutstr(preg_replace("/\[.+?\]/ies", '', dhtmlspecialchars($post['message'])), 300) ;
++					$post['message'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return ''; }, $post['message']);
++					$list[$pid]['message'] = cutstr(preg_replace_callback("/\[.+?\]/is", function($matches) { return ''; }, dhtmlspecialchars($post['message'])), 300) ;
+ 				}
+ 			}
+ 			krsort($list);
+diff --git a/source/module/forum/forum_misc.php b/source/module/forum/forum_misc.php
+index 8491c70..a929ed3 100644
+--- a/source/module/forum/forum_misc.php
++++ b/source/module/forum/forum_misc.php
+@@ -265,7 +265,7 @@ if($_GET['action'] == 'paysucceed') {
+ 	}
+ 	$totalcomment = C::t('forum_postcomment')->fetch_standpoint_by_pid($_GET['pid']);
+ 	$totalcomment = $totalcomment['comment'];
+-	$totalcomment = preg_replace('/<i>([\.\d]+)<\/i>/e', "'<i class=\"cmstarv\" style=\"background-position:20px -'.(intval(\\1) * 16).'px\">'.sprintf('%1.1f', \\1).'</i>'.(\$cic++ % 2 ? '<br />' : '');", $totalcomment);
++	$totalcomment = preg_replace_callback('/<i>([\.\d]+)<\/i>/', function($matches) use($cic) { return '<i class="cmstarv" style="background-position:20px -'.(intval($matches[1]) * 16).'px">'.sprintf('%1.1f', $matches[1]).'</i>'.($cic++ % 2 ? '<br />' : ''); }, $totalcomment);
+ 	$count = C::t('forum_postcomment')->count_by_search(null, $_GET['pid']);
+ 	$multi = multi($count, $commentlimit, $page, "forum.php?mod=misc&action=commentmore&tid=$_G[tid]&pid=$_GET[pid]");
+ 	include template('forum/comment_more');
+diff --git a/source/module/forum/forum_viewthread.php b/source/module/forum/forum_viewthread.php
+index 295374f..d574618 100644
+--- a/source/module/forum/forum_viewthread.php
++++ b/source/module/forum/forum_viewthread.php
+@@ -1194,7 +1194,7 @@ function viewthread_procpost($post, $lastvisit, $ordertype, $maxposition = 0) {
+ 			if(!defined('IN_MOBILE')) {
+ 				$messageindex = false;
+ 				if(strpos($post['message'], '[/index]') !== FALSE) {
+-					$post['message'] = preg_replace("/\s?\[index\](.+?)\[\/index\]\s?/ies", "parseindex('\\1', '$post[pid]')", $post['message']);
++					$post['message'] = preg_replace_callback("/\s?\[index\](.+?)\[\/index\]\s?/is", function($matches) use($post) { return parseindex($matches[1], $post['pid']); }, $post['message']);
+ 					$messageindex = true;
+ 					unset($_GET['threadindex']);
+ 				}
+@@ -1236,7 +1236,7 @@ function viewthread_procpost($post, $lastvisit, $ordertype, $maxposition = 0) {
+ 					$post['message'] = parse_related_link($post['message'], $relatedtype);
+ 				}
+ 				if(strpos($post['message'], '[/begin]') !== FALSE) {
+-					$post['message'] = preg_replace("/\[begin(=\s*([^\[\<\r\n]*?)\s*,(\d*),(\d*),(\d*),(\d*))?\]\s*([^\[\<\r\n]+?)\s*\[\/begin\]/ies", $_G['cache']['usergroups'][$post['groupid']]['allowbegincode'] ? "parsebegin('\\2', '\\7', '\\3', '\\4', '\\5', '\\6');" : '', $post['message']);
++					$post['message'] = preg_replace_callback("/\[begin(=\s*([^\[\<\r\n]*?)\s*,(\d*),(\d*),(\d*),(\d*))?\]\s*([^\[\<\r\n]+?)\s*\[\/begin\]/is", function($matches) use($_G, $post) { return $_G['cache']['usergroups'][$post['groupid']]['allowbegincode'] ? parsebegin($matches[2], $matches[7], $matches[3], $matches[4], $matches[5], $matches[6]) : ''; }, $post['message']);
+ 				}
+ 			}
+ 		}
+@@ -1249,7 +1249,7 @@ function viewthread_procpost($post, $lastvisit, $ordertype, $maxposition = 0) {
+ 			$post['message'] = preg_replace("/\s?\[index\](.+?)\[\/index\]\s?/is", '', $post['message']);
+ 		}
+ 		if(strpos($post['message'], '[/begin]') !== FALSE) {
+-			$post['message'] = preg_replace("/\[begin(=\s*([^\[\<\r\n]*?)\s*,(\d*),(\d*),(\d*),(\d*))?\]\s*([^\[\<\r\n]+?)\s*\[\/begin\]/ies", '', $post['message']);
++			$post['message'] = preg_replace_callback("/\[begin(=\s*([^\[\<\r\n]*?)\s*,(\d*),(\d*),(\d*),(\d*))?\]\s*([^\[\<\r\n]+?)\s*\[\/begin\]/is", function($matches) { return ''; }, $post['message']);
+ 		}
+ 	}
+ 	if($imgcontent) {
+diff --git a/source/module/misc/misc_mobile.php b/source/module/misc/misc_mobile.php
+index 5e40664..33b6139 100644
+--- a/source/module/misc/misc_mobile.php
++++ b/source/module/misc/misc_mobile.php
+@@ -61,7 +61,7 @@ function output_preview() {
+ 	$content = ob_get_contents();
+ 	ob_end_clean();
+ 	ob_start();
+-	$content = preg_replace("/\<a href=\"(.*?)\"[\s]?\>(.*?)\<\/a\>/e", "replace_href('\\2', '\\1')", $content);
++	$content = preg_replace_callback("/\<a href=\"(.*?)\"[\s]?\>(.*?)\<\/a\>/", function($matches) { return replace_href($matches[2], $matches[1]); }, $content);
+ 	echo $content;
+ 	exit;
+ }
+diff --git a/source/plugin/cloudsearch/cloudsearch.inc.php b/source/plugin/cloudsearch/cloudsearch.inc.php
+index 94f88e2..5e221fc 100644
+--- a/source/plugin/cloudsearch/cloudsearch.inc.php
++++ b/source/plugin/cloudsearch/cloudsearch.inc.php
+@@ -61,7 +61,7 @@ function check_formula_forum_isforbidden($formula) {
+ 		foreach($a[1] as $field) {
+ 			switch($field) {
+ 				case 'regdate':
+-					$formula = preg_replace("/\{(\d{4})\-(\d{1,2})\-(\d{1,2})\}/e", "'\'\\1-'.sprintf('%02d', '\\2').'-'.sprintf('%02d', '\\3').'\''", $formula);
++					$formula = preg_replace_callback("/\{(\d{4})\-(\d{1,2})\-(\d{1,2})\}/", function($matches) { return '\''.$matches[1].'-'.sprintf('%02d', $matches[2]).'-'.sprintf('%02d', $matches[3]).'\''; }, $formula);
+ 				case 'regday':
+ 					break;
+ 				case 'regip':
+diff --git a/source/plugin/manyou/Service/Connect.php b/source/plugin/manyou/Service/Connect.php
+index f86cdf0..1b94c76 100644
+--- a/source/plugin/manyou/Service/Connect.php
++++ b/source/plugin/manyou/Service/Connect.php
+@@ -202,7 +202,7 @@ class Cloud_Service_Connect {
+ 			$attachIds[] = $aid;
+ 			$attachImages[] = $imageItem;
+ 		}
+-		$content = preg_replace('/\[attach\](\d+)\[\/attach\]/ie', '$this->connectParseAttachTag(\\1, $attachNames)', $content);
++		$content = preg_replace_callback('/\[attach\](\d+)\[\/attach\]/i', function($matches) use($attachNames) { return $this->connectParseAttachTag($matches[1], $attachNames); }, $content);
+ 
+ 		return $content;
+ 	}
+diff --git a/source/plugin/mobile/api/4/viewthread.php b/source/plugin/mobile/api/4/viewthread.php
+index 9591ffc..9e91ee0 100644
+--- a/source/plugin/mobile/api/4/viewthread.php
++++ b/source/plugin/mobile/api/4/viewthread.php
+@@ -192,7 +192,7 @@ class mobile_api {
+ 	}
+ 
+ 	function _findimg($string) {
+-		return preg_replace('/(<img src=\")(.+?)(\".*?\>)/ise', "mobile_api::_parseimg('\\1', '\\2', '\\3')", $string);
++		return preg_replace_callback('/(<img src=\")(.+?)(\".*?\>)/is', function($matches) { return mobile_api::_parseimg($matches[1], $matches[2], $matches[3]); }, $string);
+ 	}
+ 
+ 	function _parseimg($before, $img, $after) {
+diff --git a/source/plugin/mobile/discuzcode.func.php b/source/plugin/mobile/discuzcode.func.php
+index 788bdd0..47a72a0 100644
+--- a/source/plugin/mobile/discuzcode.func.php
++++ b/source/plugin/mobile/discuzcode.func.php
+@@ -23,18 +23,18 @@ function mobile_discuzcode($param) {
+ 
+ 	if($pid && strpos($message, '[/password]') !== FALSE) {
+ 		if($authorid != $_G['uid'] && !$_G['forum']['ismoderator']) {
+-			$message = preg_replace("/\s?\[password\](.+?)\[\/password\]\s?/ie", "parsepassword('\\1', \$pid)", $message);
++			$message = preg_replace_callback("/\s?\[password\](.+?)\[\/password\]\s?/i", function($matches) use($pid) { return parsepassword($matches[1], $pid); }, $message);
+ 			if($_G['forum_discuzcode']['passwordlock'][$pid]) {
+ 				return '';
+ 			}
+ 		} else {
+-			$message = preg_replace("/\s?\[password\](.+?)\[\/password\]\s?/ie", "", $message);
++			$message = preg_replace_callback("/\s?\[password\](.+?)\[\/password\]\s?/i", function($matches) { return ''; }, $message);
+ 			$_G['forum_discuzcode']['passwordauthor'][$pid] = 1;
+ 		}
+ 	}
+ 
+ 	if($parsetype != 1 && !$bbcodeoff && $allowbbcode && (strpos($message, '[/code]') || strpos($message, '[/CODE]')) !== FALSE) {
+-		$message = preg_replace("/\s?\[code\](.+?)\[\/code\]\s?/ies", "mobile_parsecode('\\1')", $message);
++		$message = preg_replace_callback("/\s?\[code\](.+?)\[\/code\]\s?/is", function($matches) { return mobile_parsecode($matches[1]); }, $message);
+ 	}
+ 
+ 	$msglower = strtolower($message);
+@@ -52,26 +52,26 @@ function mobile_discuzcode($param) {
+ 	}
+ 
+ 	if($_G['setting']['allowattachurl'] && strpos($msglower, 'attach://') !== FALSE) {
+-		$message = preg_replace("/attach:\/\/(\d+)\.?(\w*)/ie", "parseattachurl('\\1', '\\2', 1)", $message);
++		$message = preg_replace_callback("/attach:\/\/(\d+)\.?(\w*)/i", function($matches) { return parseattachurl($matches[1], $matches[2], 1); }, $message);
+ 	}
+ 
+ 	if($allowbbcode) {
+ 		if(strpos($msglower, 'ed2k://') !== FALSE) {
+-			$message = preg_replace("/ed2k:\/\/(.+?)\//e", "mobile_parseed2k('\\1')", $message);
++			$message = preg_replace_callback("/ed2k:\/\/(.+?)\//", function($matches) { return mobile_parseed2k($matches[1]); }, $message);
+ 		}
+ 	}
+ 
+ 	if(!$bbcodeoff && $allowbbcode) {
+ 		if(strpos($msglower, '[/url]') !== FALSE) {
+-			$message = preg_replace("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/ies", "mobile_parseurl('\\1', '\\5', '\\2')", $message);
++			$message = preg_replace_callback("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/is", function($matches) { return mobile_parseurl($matches[1], $matches[5], $matches[2]); }, $message);
+ 		}
+ 		if(strpos($msglower, '[/email]') !== FALSE) {
+-			$message = preg_replace("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/ies", "strip_tags(parseemail('\\1', '\\4'))", $message);
++			$message = preg_replace_callback("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/is", function($matches) { return strip_tags(parseemail($matches[1], $matches[4])); }, $message);
+ 		}
+ 
+ 		$nest = 0;
+ 		while(strpos($msglower, '[table') !== FALSE && strpos($msglower, '[/table]') !== FALSE){
+-			$message = preg_replace("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/ies", "mobile_parsetable('\\1', '\\2', '\\3')", $message);
++			$message = preg_replace_callback("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/is", function($matches) { return mobile_parsetable($matches[1], $matches[2], $matches[3]); }, $message);
+ 			if(++$nest > 4) break;
+ 		}
+ 
+@@ -120,13 +120,13 @@ function mobile_discuzcode($param) {
+ 			}
+ 		}
+ 		if(strpos($msglower, '[/media]') !== FALSE) {
+-			$message = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", "bbcodeurl('\\2', '<a class=\"media\" href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
++			$message = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) { return bbcodeurl($matches[2], '<a class="media" href="{url}" target="_blank">{url}</a>'); }, $message);
+ 		}
+ 		if(strpos($msglower, '[/audio]') !== FALSE) {
+-			$message = preg_replace("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/ies", "bbcodeurl('\\2', '<a href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
++			$message = preg_replace_callback("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/is", function($matches) { return bbcodeurl($matches[2], '<a href="{url}" target="_blank">{url}</a>'); }, $message);
+ 		}
+ 		if(strpos($msglower, '[/flash]') !== FALSE) {
+-			$message = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", "bbcodeurl('\\4', '<a href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
++			$message = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) { return bbcodeurl($matches[4], '<a href="{url}" target="_blank">{url}</a>'); }, $message);
+ 		}
+ 
+ 		if($parsetype != 1 && $allowbbcode < 0 && isset($_G['cache']['bbcodes'][-$allowbbcode])) {
+@@ -138,7 +138,7 @@ function mobile_discuzcode($param) {
+ 				$msglower = strtolower($message);
+ 			}
+ 			if(strpos($msglower, '[hide=d') !== FALSE) {
+-				$message = preg_replace("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/ies", "expirehide('\\1','\\2','\\3', $pdateline)", $message);
++				$message = preg_replace_callback("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/is", function($matches) use($pdateline) { return expirehide($matches[1], $matches[2], $matches[3], $pdateline); }, $message);
+ 				$msglower = strtolower($message);
+ 			}
+ 			if(strpos($msglower, '[hide]') !== FALSE) {
+@@ -158,7 +158,7 @@ function mobile_discuzcode($param) {
+ 				}
+ 			}
+ 			if(strpos($msglower, '[hide=') !== FALSE) {
+-				$message = preg_replace("/\[hide=(\d+)\]\s*(.*?)\s*\[\/hide\]/ies", "creditshide(\\1,'\\2', $pid, $authorid)", $message);
++				$message = preg_replace_callback("/\[hide=(\d+)\]\s*(.*?)\s*\[\/hide\]/is", function($matches) use($pid, $authorid) { return creditshide($matches[1], $matches[2], $pid, $authorid); }, $message);
+ 			}
+ 		}
+ 	}
+@@ -171,21 +171,13 @@ function mobile_discuzcode($param) {
+ 
+ 	if(!$bbcodeoff) {
+ 		if($parsetype != 1 && strpos($msglower, '[swf]') !== FALSE) {
+-			$message = preg_replace("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/ies", "bbcodeurl('\\1', ' <img src=\"'.STATICURL.'image/filetype/flash.gif\" align=\"absmiddle\" alt=\"\" /> <a href=\"{url}\" target=\"_blank\">Flash: {url}</a> ')", $message);
++			$message = preg_replace_callback("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/is", function($matches) { return bbcodeurl($matches[1], ' <img src="'.STATICURL.'image/filetype/flash.gif" align="absmiddle" alt="" /> <a href="{url}" target="_blank">Flash: {url}</a> '); }, $message);
+ 		}
+ 
+ 		$attrsrc = !IS_ROBOT && $lazyload ? 'file' : 'src';
+ 		if(strpos($msglower, '[/img]') !== FALSE) {
+-			$message = preg_replace(array(
+-				"/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies",
+-				"/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies"
+-			), $allowimgcode ? array(
+-				"mobile_parseimg(0, 0, '\\1', ".intval($lazyload).", ".intval($pid).", 'onmouseover=\"img_onmouseoverfunc(this)\" ".($lazyload ? "lazyloadthumb=\"1\"" : "onload=\"thumbImg(this)\"")."')",
+-				"mobile_parseimg('\\1', '\\2', '\\3', ".intval($lazyload).", ".intval($pid).")"
+-			) : ($allowbbcode ? array(
+-				(!defined('IN_MOBILE') ? "bbcodeurl('\\1', '<a href=\"{url}\" target=\"_blank\">{url}</a>')" : "bbcodeurl('\\1', '')"),
+-				(!defined('IN_MOBILE') ? "bbcodeurl('\\3', '<a href=\"{url}\" target=\"_blank\">{url}</a>')" : "bbcodeurl('\\3', '')"),
+-			) : array("bbcodeurl('\\1', '{url}')", "bbcodeurl('\\3', '{url}')")), $message);
++			$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimgcode, $lazyload, $pid, $allowbbcode) { return $allowimgcode ? mobile_parseimg(0, 0, $matches[1], intval($lazyload), intval($pid), 'onmouseover="img_onmouseoverfunc(this)" '.($lazyload ? 'lazyloadthumb="1"' : 'onload="thumbImg(this)"')) : ($allowbbcode ? (!defined('IN_MOBILE') ? bbcodeurl($matches[1], '<a href="{url}" target="_blank">{url}</a>') : bbcodeurl($matches[1], '')) : bbcodeurl($matches[1], '{url}')); }, $message);
++			$message = preg_replace_callback("/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimgcode, $lazyload, $pid, $allowbbcode) { return $allowimgcode ? mobile_parseimg($matches[1], $matches[2], $matches[3], intval($lazyload), intval($pid)) : ($allowbbcode ? (!defined('IN_MOBILE') ? bbcodeurl('\\3', '<a href=\"{url}\" target=\"_blank\">{url}</a>') : bbcodeurl($matches[3], '')) : bbcodeurl($matches[3], '{url}')); }, $message);
+ 		}
+ 	}
+ 
+@@ -271,21 +263,13 @@ function mobile_parsetable($width, $bgcolor, $message) {
+ 		if(!preg_match("/^\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td([=\d,%]+)?\]/", $message) && !preg_match("/^<tr[^>]*?>\s*<td[^>]*?>/", $message)) {
+ 			return str_replace('\\"', '"', preg_replace("/\[tr(?:=([\(\)\s%,#\w]+))?\]|\[td([=\d,%]+)?\]|\[\/td\]|\[\/tr\]/", '', $message));
+ 		}
++		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return mobile_parsetrtd($matches[1], 0, 0, $matches[2]); }, $message);
++		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return mobile_parsetrtd('td', 0, 0, $matches[1]); }, $message);
++		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return mobile_parsetrtd($matches[1], $matches[2], $matches[3], $matches[4]); }, $message);
++		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return mobile_parsetrtd('td', $matches[1], $matches[2], $matches[3]); }, $message);
+ 		return '<table class="dzcode_table" cellspacing="0" '.
+ 			($bgcolor ? ' bgcolor="'.$bgcolor.'">' : '>').
+-			str_replace('\\"', '"', preg_replace(array(
+-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
+-					"/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
+-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
+-					"/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
+-					"/\[\/td\]\s*\[\/tr\]\s*/i"
+-				), array(
+-					"mobile_parsetrtd('\\1', '0', '0', '\\2')",
+-					"mobile_parsetrtd('td', '0', '0', '\\1')",
+-					"mobile_parsetrtd('\\1', '\\2', '\\3', '\\4')",
+-					"mobile_parsetrtd('td', '\\1', '\\2', '\\3')",
+-					'</td></tr>'
+-				), $message)
++			str_replace('\\"', '"', preg_replace("/\[\/td\]\s*\[\/tr\]\s*/i", '</td></tr>', $message)
+ 			).'</table>';
+ 	}
+ }
+diff --git a/source/plugin/qqconnect/connect/connect_feed.php b/source/plugin/qqconnect/connect/connect_feed.php
+index d07c685..4208dcd 100644
+--- a/source/plugin/qqconnect/connect/connect_feed.php
++++ b/source/plugin/qqconnect/connect/connect_feed.php
+@@ -53,10 +53,10 @@ if ($op == 'new') {
+ 			$post['message'] = preg_replace('/\[quote\].*\[\/quote\](\r\n|\n|\r){0,}/is', '', $post['message']);
+ 		}
+ 		if(strpos($msglower, '[/media]') !== FALSE) {
+-			$post['message'] = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", '', $post['message']);
++			$post['message'] = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) { return ''; }, $post['message']);
+ 		}
+ 		if(strpos($msglower, '[/flash]') !== FALSE) {
+-			$post['message'] = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", '', $post['message']);
++			$post['message'] = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) { return ''; }, $post['message']);
+ 		}
+ 		if(strpos($msglower, '[/hide]') !== FALSE) {
+ 			$post['message'] = preg_replace("/\[hide[=]?(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/is", '', $post['message']);
+@@ -216,10 +216,10 @@ if ($op == 'new') {
+ 			$post['message'] = preg_replace('/\[quote\].*\[\/quote\](\r\n|\n|\r){0,}/is', '', $post['message']);
+ 		}
+ 		if(strpos($msglower, '[/media]') !== FALSE) {
+-			$post['message'] = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", '', $post['message']);
++			$post['message'] = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) { return ''; }, $post['message']);
+ 		}
+ 		if(strpos($msglower, '[/flash]') !== FALSE) {
+-			$post['message'] = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", '', $post['message']);
++			$post['message'] = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) { return ''; }, $post['message']);
+ 		}
+ 		$html_content = $connectService->connectParseBbcode($post['message'], $post['fid'], $post['pid'], $post['htmlon'], $attach_images);
+ 		$html_content = strip_tags(preg_replace('/(&nbsp;)+/', ' ', $html_content));
+diff --git a/source/plugin/soso_smilies/soso.class.php b/source/plugin/soso_smilies/soso.class.php
+index 177d00c..50c04a7 100644
+--- a/source/plugin/soso_smilies/soso.class.php
++++ b/source/plugin/soso_smilies/soso.class.php
+@@ -78,7 +78,7 @@ class plugin_soso_smilies extends plugin_soso_smilies_base {
+ 			$allowsmilies = $param['param'][4];
+ 			$pid = $param['param'][12];
+ 			if(!$smileyoff && $allowsmilies && strpos($_G['discuzcodemessage'], '{:soso_') !== false) {
+-				$_G['discuzcodemessage'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", "'.$_G['setting']['maxsmilies'].'", "'.$pid.'")', $_G['discuzcodemessage'], $_G['setting']['maxsmilies']);
++				$_G['discuzcodemessage'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) use($pid, $_G) { return $this->_soso_smiles($matches[1], $_G['setting']['maxsmilies'], $pid); }, $_G['discuzcodemessage'], $_G['setting']['maxsmilies']);
+ 			}
+ 		} else {
+ 			$_G['discuzcodemessage'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", '', $_G['discuzcodemessage']);
+@@ -137,7 +137,7 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
+ 	function spacecp_profile_sightml() {
+ 		global $_G;
+ 		if($_GET['ac'] == 'profile' && submitcheck('profilesubmitbtn') && !empty($_POST['sightml'])) {
+-			$_POST['sightml'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 1)', $_POST['sightml'], $_G['setting']['maxsmilies']);
++			$_POST['sightml'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 1); }, $_POST['sightml'], $_G['setting']['maxsmilies']);
+ 		}
+ 	}
+ 
+@@ -146,12 +146,12 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
+ 		if(!empty($GLOBALS['msglist'])) {
+ 			foreach($GLOBALS['msglist'] as $day => $result) {
+ 				foreach($result as $key => $value) {
+-					$GLOBALS['msglist'][$day][$key]['message'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['msglist'][$day][$key]['message'], $_G['setting']['maxsmilies']);
++					$GLOBALS['msglist'][$day][$key]['message'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['msglist'][$day][$key]['message'], $_G['setting']['maxsmilies']);
+ 				}
+ 			}
+ 		} elseif($_GET['op'] == 'showchatmsg' && $GLOBALS['list']) {
+ 			foreach($GLOBALS['list'] as $key => $value) {
+-				$GLOBALS['list'][$key]['message'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['list'][$key]['message'], $_G['setting']['maxsmilies']);
++				$GLOBALS['list'][$key]['message'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['list'][$key]['message'], $_G['setting']['maxsmilies']);
+ 			}
+ 		}
+ 	}
+@@ -161,7 +161,7 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
+ 		if(!empty($GLOBALS['list'])) {
+ 			foreach($GLOBALS['list'] as $key => $value) {
+ 				if(!empty($_GET['subop'])) {
+-					$GLOBALS['list'][$key] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['list'][$key], $_G['setting']['maxsmilies']);
++					$GLOBALS['list'][$key] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['list'][$key], $_G['setting']['maxsmilies']);
+ 				} else {
+ 					$GLOBALS['list'][$key] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", '', $GLOBALS['list'][$key], $_G['setting']['maxsmilies']);
+ 				}
+@@ -173,7 +173,7 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
+ 		global $_G;
+ 		if(!empty($GLOBALS['list']['content'])) {
+ 			foreach($GLOBALS['list']['content'] as $key => $value) {
+-				$GLOBALS['list']['content'][$key]['content'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['list']['content'][$key]['content'], $_G['setting']['maxsmilies']);
++				$GLOBALS['list']['content'][$key]['content'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['list']['content'][$key]['content'], $_G['setting']['maxsmilies']);
+ 			}
+ 		}
+ 	}
+diff --git a/uc_client/lib/uccode.class.php b/uc_client/lib/uccode.class.php
+index 2413129..a3e908a 100644
+--- a/uc_client/lib/uccode.class.php
++++ b/uc_client/lib/uccode.class.php
+@@ -33,13 +33,13 @@ class uccode {
+ 	function complie($message) {
+ 		$message = dhtmlspecialchars($message);
+ 		if(strpos($message, '[/code]') !== FALSE) {
+-			$message = preg_replace("/\s*\[code\](.+?)\[\/code\]\s*/ies", "\$this->codedisp('\\1')", $message);
++			$message = preg_replace_callback("/\s*\[code\](.+?)\[\/code\]\s*/is", function($matches) { return $this->codedisp($matches[1]); }, $message);
+ 		}
+ 		if(strpos($message, '[/url]') !== FALSE) {
+-			$message = preg_replace("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|ed2k|thunder|synacast){1}:\/\/|www\.)([^\[\"']+?))?\](.+?)\[\/url\]/ies", "\$this->parseurl('\\1', '\\5')", $message);
++			$message = preg_replace_callback("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|ed2k|thunder|synacast){1}:\/\/|www\.)([^\[\"']+?))?\](.+?)\[\/url\]/is", function($matches) { return $this->parseurl($matches[1], $matches[5]); }, $message);
+ 		}
+ 		if(strpos($message, '[/email]') !== FALSE) {
+-			$message = preg_replace("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/ies", "\$this->parseemail('\\1', '\\4')", $message);
++			$message = preg_replace_callback("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/is", function($matches) { return $this->parseemail($matches[1], $matches[4]); }, $message);
+ 		}
+ 		$message = str_replace(array(
+ 			'[/color]', '[/size]', '[/font]', '[/align]', '[b]', '[/b]',
+@@ -68,13 +68,8 @@ class uccode {
+ 			$message = preg_replace("/\s*\[quote\][\n\r]*(.+?)[\n\r]*\[\/quote\]\s*/is", $this->tpl_quote(), $message);
+ 		}
+ 		if(strpos($message, '[/img]') !== FALSE) {
+-			$message = preg_replace(array(
+-				"/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies",
+-				"/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies"
+-			), array(
+-				"\$this->bbcodeurl('\\1', '<img src=\"%s\" border=\"0\" alt=\"\" />')",
+-				"\$this->bbcodeurl('\\3', '<img width=\"\\1\" height=\"\\2\" src=\"%s\" border=\"0\" alt=\"\" />')"
+-			), $message);
++			$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) { return $this->bbcodeurl($matches[1], '<img src="%s" border="0" alt="" />'); }, $message);
++			$message = preg_replace_callback("/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) { return $this->bbcodeurl($matches[3], '<img width="'.$matches[1].'" height="'.$matches[2].'" src="%s" border="0" alt="" />'); }, $message);
+ 		}
+ 		for($i = 0; $i <= $this->uccode['pcodecount']; $i++) {
+ 			$message = str_replace("[\tUCENTER_CODE_$i\t]", $this->uccode['codehtml'][$i], $message);
+diff --git a/uc_server/lib/template.class.php b/uc_server/lib/template.class.php
+index 4ed2bf7..0a0863a 100644
+--- a/uc_server/lib/template.class.php
++++ b/uc_server/lib/template.class.php
+@@ -80,22 +80,22 @@ class template {
+ 		$template = preg_replace("/\{($this->const_regexp)\}/", "<?=\\1?>", $template);
+ 		$template = preg_replace("/(?<!\<\?\=|\\\\)$this->var_regexp/", "<?=\\0?>", $template);
+ 
+-		$template = preg_replace("/\<\?=(\@?\\\$[a-zA-Z_]\w*)((\[[\\$\[\]\w]+\])+)\?\>/ies", "\$this->arrayindex('\\1', '\\2')", $template);
++		$template = preg_replace_callback("/\<\?=(\@?\\\$[a-zA-Z_]\w*)((\[[\\$\[\]\w]+\])+)\?\>/is", function($matches) { return $this->arrayindex($matches[1], $matches[2]); }, $template);
+ 
+-		$template = preg_replace("/\{\{eval (.*?)\}\}/ies", "\$this->stripvtag('<? \\1?>')", $template);
+-		$template = preg_replace("/\{eval (.*?)\}/ies", "\$this->stripvtag('<? \\1?>')", $template);
+-		$template = preg_replace("/\{for (.*?)\}/ies", "\$this->stripvtag('<? for(\\1) {?>')", $template);
++		$template = preg_replace_callback("/\{\{eval (.*?)\}\}/is", function($matches) { return $this->stripvtag('<? '.$matches[1].'?>'); }, $template);
++		$template = preg_replace_callback("/\{eval (.*?)\}/is", function($matches) { return $this->stripvtag('<? '.$matches[1].'?>'); }, $template);
++		$template = preg_replace_callback("/\{for (.*?)\}/is", function($matches) { return $this->stripvtag('<? for('.$matches[1].') {?>'); }, $template);
+ 
+-		$template = preg_replace("/\{elseif\s+(.+?)\}/ies", "\$this->stripvtag('<? } elseif(\\1) { ?>')", $template);
++		$template = preg_replace_callback("/\{elseif\s+(.+?)\}/is", function($matches) { return $this->stripvtag('<? } elseif('.$matches[1].') { ?>'); }, $template);
+ 
+ 		for($i=0; $i<2; $i++) {
+-			$template = preg_replace("/\{loop\s+$this->vtag_regexp\s+$this->vtag_regexp\s+$this->vtag_regexp\}(.+?)\{\/loop\}/ies", "\$this->loopsection('\\1', '\\2', '\\3', '\\4')", $template);
+-			$template = preg_replace("/\{loop\s+$this->vtag_regexp\s+$this->vtag_regexp\}(.+?)\{\/loop\}/ies", "\$this->loopsection('\\1', '', '\\2', '\\3')", $template);
++			$template = preg_replace_callback("/\{loop\s+$this->vtag_regexp\s+$this->vtag_regexp\s+$this->vtag_regexp\}(.+?)\{\/loop\}/is", function($matches) { return $this->loopsection($matches[1], $matches[2], $matches[3], $matches[4]); }, $template);
++			$template = preg_replace_callback("/\{loop\s+$this->vtag_regexp\s+$this->vtag_regexp\}(.+?)\{\/loop\}/is", function($matches) { return $this->loopsection($matches[1], '', $matches[2], $matches[3]); }, $template);
+ 		}
+-		$template = preg_replace("/\{if\s+(.+?)\}/ies", "\$this->stripvtag('<? if(\\1) { ?>')", $template);
++		$template = preg_replace_callback("/\{if\s+(.+?)\}/is", function($matches) { return $this->stripvtag('<? if('.$matches[1].') { ?>'); }, $template);
+ 
+ 		$template = preg_replace("/\{template\s+(\w+?)\}/is", "<? include \$this->gettpl('\\1');?>", $template);
+-		$template = preg_replace("/\{template\s+(.+?)\}/ise", "\$this->stripvtag('<? include \$this->gettpl(\\1); ?>')", $template);
++		$template = preg_replace_callback("/\{template\s+(.+?)\}/is", function($matches) { return $this->stripvtag('<? include $this->gettpl('.$matches[1].'); ?>'); }, $template);
+ 
+ 
+ 		$template = preg_replace("/\{else\}/is", "<? } else { ?>", $template);
+@@ -155,15 +155,8 @@ class template {
+ 		if($_COOKIE['sid']) {
+ 		}
+ 		$sid = rawurlencode($this->sid);
+-		$searcharray = array(
+-			"/\<a(\s*[^\>]+\s*)href\=([\"|\']?)([^\"\'\s]+)/ies",
+-			"/(\<form.+?\>)/is"
+-		);
+-		$replacearray = array(
+-			"\$this->_transsid('\\3','<a\\1href=\\2')",
+-			"\\1\n<input type=\"hidden\" name=\"sid\" value=\"".rawurldecode(rawurldecode(rawurldecode($sid)))."\" />"
+-		);
+-		$content = preg_replace($searcharray, $replacearray, ob_get_contents());
++		$content = preg_replace_callback("/\<a(\s*[^\>]+\s*)href\=([\"|\']?)([^\"\'\s]+)/is", function($matches) { return $this->_transsid($matches[3],'<a'.$matches[1].'href='.$matches[2]); }, ob_get_contents());
++		$content = preg_replace("/(\<form.+?\>)/is", "\\1\n<input type=\"hidden\" name=\"sid\" value=\"".rawurldecode(rawurldecode(rawurldecode($sid)))."\" />", $content);
+ 		ob_end_clean();
+ 		echo $content;
+ 	}
+diff --git a/uc_server/lib/uccode.class.php b/uc_server/lib/uccode.class.php
+index c516106..ee7aa2a 100644
+--- a/uc_server/lib/uccode.class.php
++++ b/uc_server/lib/uccode.class.php
+@@ -33,13 +33,13 @@ class uccode {
+ 	function complie($message) {
+ 		$message = dhtmlspecialchars($message);
+ 		if(strpos($message, '[/code]') !== FALSE) {
+-			$message = preg_replace("/\s*\[code\](.+?)\[\/code\]\s*/ies", "\$this->codedisp('\\1')", $message);
++			$message = preg_replace_callback("/\s*\[code\](.+?)\[\/code\]\s*/is", function($matches) { return $this->codedisp($matches[1]); }, $message);
+ 		}
+ 		if(strpos($message, '[/url]') !== FALSE) {
+-			$message = preg_replace("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|ed2k|thunder|synacast){1}:\/\/|www\.)([^\[\"']+?))?\](.+?)\[\/url\]/ies", "\$this->parseurl('\\1', '\\5')", $message);
++			$message = preg_replace_callback("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|ed2k|thunder|synacast){1}:\/\/|www\.)([^\[\"']+?))?\](.+?)\[\/url\]/is", function($matches) { return $this->parseurl($matches[1], $matches[5]); }, $message);
+ 		}
+ 		if(strpos($message, '[/email]') !== FALSE) {
+-			$message = preg_replace("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/ies", "\$this->parseemail('\\1', '\\4')", $message);
++			$message = preg_replace_callback("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/is", function($matches) { return $this->parseemail($matches[1], $matches[4]); }, $message);
+ 		}
+ 		$message = str_replace(array(
+ 			'[/color]', '[/size]', '[/font]', '[/align]', '[b]', '[/b]',
+@@ -68,13 +68,8 @@ class uccode {
+ 			$message = preg_replace("/\s*\[quote\][\n\r]*(.+?)[\n\r]*\[\/quote\]\s*/is", $this->tpl_quote(), $message);
+ 		}
+ 		if(strpos($message, '[/img]') !== FALSE) {
+-			$message = preg_replace(array(
+-				"/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies",
+-				"/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies"
+-			), array(
+-				"\$this->bbcodeurl('\\1', '<img src=\"%s\" border=\"0\" alt=\"\" />')",
+-				"\$this->bbcodeurl('\\3', '<img width=\"\\1\" height=\"\\2\" src=\"%s\" border=\"0\" alt=\"\" />')"
+-			), $message);
++			$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) { return $this->bbcodeurl($matches[1], '<img src="%s" border="0" alt="" />'); }, $message);
++			$message = preg_replace_callback("/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) { return $this->bbcodeurl($matches[3], '<img width="'.$matches[1].'" height="'.$matches[2].'" src="%s" border="0" alt="" />'); }, $message);
+ 		}
+ 		for($i = 0; $i <= $this->uccode['pcodecount']; $i++) {
+ 			$message = str_replace("[\tUCENTER_CODE_$i\t]", $this->uccode['codehtml'][$i], $message);
+-- 
+2.5.1.windows.1
+
+From 85e2b9368df6c784e636a7f6305d994984983aa6 Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 16:46:57 +0800
+Subject: [PATCH] remove MySQL Driver && set_magic_quotes_runtime
+
+---
+ api/db/dbbak.php                           | 134 +----------------
+ install/include/install_function.php       |  21 ++-
+ install/include/install_mysql.php          | 145 ------------------
+ install/include/install_var.php            |   4 +-
+ install/index.php                          |  41 ++----
+ source/class/db/db_driver_mysql.php        | 229 -----------------------------
+ source/class/db/db_driver_mysql_slave.php  |  93 ------------
+ source/class/discuz/discuz_application.php |   9 +-
+ source/class/discuz/discuz_database.php    |   4 +-
+ uc_client/client.php                       |   8 +-
+ uc_client/lib/db.class.php                 | 176 ----------------------
+ uc_client/model/base.php                   |   8 +-
+ uc_server/admin.php                        |   1 -
+ uc_server/api/dbbak.php                    | 134 +----------------
+ uc_server/index.php                        |   1 -
+ uc_server/install/db.class.php             | 145 ------------------
+ uc_server/install/func.inc.php             |  21 ++-
+ uc_server/lib/db.class.php                 | 176 ----------------------
+ uc_server/model/base.php                   |   8 +-
+ 19 files changed, 45 insertions(+), 1313 deletions(-)
+ delete mode 100644 install/include/install_mysql.php
+ delete mode 100644 source/class/db/db_driver_mysql.php
+ delete mode 100644 source/class/db/db_driver_mysql_slave.php
+ delete mode 100644 uc_client/lib/db.class.php
+ delete mode 100644 uc_server/install/db.class.php
+ delete mode 100644 uc_server/lib/db.class.php
+
+diff --git a/api/db/dbbak.php b/api/db/dbbak.php
+index e2ad796..65fb780 100644
+--- a/api/db/dbbak.php
++++ b/api/db/dbbak.php
+@@ -71,138 +71,6 @@ if($timestamp - $get['time'] > 3600) {
+ }
+ $get['time'] = $timestamp;
+ 
+-class dbstuff {
+-	var $querynum = 0;
+-	var $link;
+-	var $histories;
+-	var $time;
+-	var $tablepre;
+-
+-	function connect($dbhost, $dbuser, $dbpw, $dbname = '', $dbcharset, $pconnect = 0, $tablepre='', $time = 0) {
+-		$this->time = $time;
+-		$this->tablepre = $tablepre;
+-		if($pconnect) {
+-			if(!$this->link = mysql_pconnect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		} else {
+-			if(!$this->link = mysql_connect($dbhost, $dbuser, $dbpw, 1)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		}
+-
+-		if($this->version() > '4.1') {
+-			if($dbcharset) {
+-				mysql_query("SET character_set_connection=".$dbcharset.", character_set_results=".$dbcharset.", character_set_client=binary", $this->link);
+-			}
+-
+-			if($this->version() > '5.0.1') {
+-				mysql_query("SET sql_mode=''", $this->link);
+-			}
+-		}
+-
+-		if($dbname) {
+-			mysql_select_db($dbname, $this->link);
+-		}
+-
+-	}
+-
+-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
+-		return mysql_fetch_array($query, $result_type);
+-	}
+-
+-	function result_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->result($query, 0);
+-	}
+-
+-	function fetch_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->fetch_array($query);
+-	}
+-
+-	function fetch_all($sql) {
+-		$arr = array();
+-		$query = $this->query($sql);
+-		while($data = $this->fetch_array($query)) {
+-			$arr[] = $data;
+-		}
+-		return $arr;
+-	}
+-
+-	function cache_gc() {
+-		$this->query("DELETE FROM {$this->tablepre}sqlcaches WHERE expiry<$this->time");
+-	}
+-
+-	function query($sql, $type = '', $cachetime = FALSE) {
+-		$func = $type == 'UNBUFFERED' && @function_exists('mysql_unbuffered_query') ? 'mysql_unbuffered_query' : 'mysql_query';
+-		if(!($query = $func($sql, $this->link)) && $type != 'SILENT') {
+-			$this->halt('MySQL Query Error', $sql);
+-		}
+-		$this->querynum++;
+-		$this->histories[] = $sql;
+-		return $query;
+-	}
+-
+-	function affected_rows() {
+-		return mysql_affected_rows($this->link);
+-	}
+-
+-	function error() {
+-		return (($this->link) ? mysql_error($this->link) : mysql_error());
+-	}
+-
+-	function errno() {
+-		return intval(($this->link) ? mysql_errno($this->link) : mysql_errno());
+-	}
+-
+-	function result($query, $row) {
+-		$query = @mysql_result($query, $row);
+-		return $query;
+-	}
+-
+-	function num_rows($query) {
+-		$query = mysql_num_rows($query);
+-		return $query;
+-	}
+-
+-	function num_fields($query) {
+-		return mysql_num_fields($query);
+-	}
+-
+-	function free_result($query) {
+-		return mysql_free_result($query);
+-	}
+-
+-	function insert_id() {
+-		return ($id = mysql_insert_id($this->link)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+-	}
+-
+-	function fetch_row($query) {
+-		$query = mysql_fetch_row($query);
+-		return $query;
+-	}
+-
+-	function fetch_fields($query) {
+-		return mysql_fetch_field($query);
+-	}
+-
+-	function version() {
+-		return mysql_get_server_info($this->link);
+-	}
+-
+-	function escape_string($str) {
+-		return mysql_escape_string($str);
+-	}
+-
+-	function close() {
+-		return mysql_close($this->link);
+-	}
+-
+-	function halt($message = '', $sql = '') {
+-		api_msg('run_sql_error', $message.'<br /><br />'.$sql.'<br /> '.mysql_error());
+-	}
+-}
+ class dbstuffi {
+ 	var $querynum = 0;
+ 	var $link;
+@@ -333,7 +201,7 @@ class dbstuffi {
+ }
+ 
+ 
+-$db = function_exists("mysql_connect") ? new dbstuff() : new dbstuffi();
++$db = new dbstuffi();
+ $version = '';
+ if($apptype == 'discuz') {
+ 
+diff --git a/install/include/install_function.php b/install/include/install_function.php
+index 02f17ae..8ea1da2 100644
+--- a/install/include/install_function.php
++++ b/install/include/install_function.php
+@@ -58,14 +58,13 @@ function show_msg($error_no, $error_msg = 'ok', $success = 1, $quit = TRUE) {
+ }
+ 
+ function check_db($dbhost, $dbuser, $dbpw, $dbname, $tablepre) {
+-	if(!function_exists('mysql_connect') && !function_exists('mysqli_connect')) {
+-		show_msg('undefine_func', 'mysql_connect', 0);
++	if(!function_exists('mysqli_connect')) {
++		show_msg('undefine_func', 'mysqli_connect', 0);
+ 	}
+-	$mysqlmode = function_exists('mysql_connect') ? 'mysql' : 'mysqli';
+-	$link = ($mysqlmode == 'mysql') ? @mysql_connect($dbhost, $dbuser, $dbpw) : new mysqli($dbhost, $dbuser, $dbpw);
++	$link = new mysqli($dbhost, $dbuser, $dbpw);
+ 	if(!$link) {
+-		$errno = ($mysqlmode == 'mysql') ? mysql_errno() : mysqli_errno();
+-		$error = ($mysqlmode == 'mysql') ? mysql_error() : mysqli_error();
++		$errno = mysqli_errno();
++		$error = mysqli_error();
+ 		if($errno == 1045) {
+ 			show_msg('database_errno_1045', $error, 0);
+ 		} elseif($errno == 2003) {
+@@ -74,11 +73,11 @@ function check_db($dbhost, $dbuser, $dbpw, $dbname, $tablepre) {
+ 			show_msg('database_connect_error', $error, 0);
+ 		}
+ 	} else {
+-		if($query = (($mysqlmode == 'mysql') ? @mysql_query("SHOW TABLES FROM $dbname") : $link->query("SHOW TABLES FROM $dbname"))) {
++		if($query = $link->query("SHOW TABLES FROM $dbname")) {
+ 			if(!$query) {
+ 				return false;
+ 			}
+-			while($row = (($mysqlmode == 'mysql') ? mysql_fetch_row($query) : $query->fetch_row())) {
++			while($row = $query->fetch_row()) {
+ 				if(preg_match("/^$tablepre/", $row[0])) {
+ 					return false;
+ 				}
+@@ -941,7 +940,7 @@ function check_env() {
+ 	$errors = array('quit' => false);
+ 	$quit = false;
+ 
+-	if(!function_exists('mysql_connect') && !function_exists('mysqli_connect')) {
++	if(!function_exists('mysqli_connect')) {
+ 		$errors[] = 'mysql_unsupport';
+ 		$quit = true;
+ 	}
+@@ -1151,7 +1150,7 @@ function save_uc_config($config, $file) {
+ 
+ 	list($appauthkey, $appid, $ucdbhost, $ucdbname, $ucdbuser, $ucdbpw, $ucdbcharset, $uctablepre, $uccharset, $ucapi, $ucip) = $config;
+ 
+-	$link = function_exists('mysql_connect') ? mysql_connect($ucdbhost, $ucdbuser, $ucdbpw, 1) : new mysqli($ucdbhost, $ucdbuser, $ucdbpw, $ucdbname);
++	$link = new mysqli($ucdbhost, $ucdbuser, $ucdbpw, $ucdbname);
+ 	$uc_connnect = $link ? 'mysql' : '';
+ 
+ 	$date = gmdate("Y-m-d H:i:s", time() + 3600 * 8);
+@@ -1718,4 +1717,4 @@ function install_extra_setting() {
+ 	foreach($settings as $key => $val) {
+ 		$db->query("REPLACE INTO {$tablepre}common_setting SET skey='$key', svalue='".addslashes(serialize($val))."'");
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/install/include/install_mysql.php b/install/include/install_mysql.php
+deleted file mode 100644
+index 9c471d7..0000000
+--- a/install/include/install_mysql.php
++++ /dev/null
+@@ -1,145 +0,0 @@
+-<?php
+-
+-/**
+- *      [Discuz!] (C)2001-2099 Comsenz Inc.
+- *      This is NOT a freeware, use is subject to license terms
+- *
+- *      $Id: install_mysql.php 33334 2013-05-28 09:51:11Z kamichen $
+- */
+-
+-if(!defined('IN_COMSENZ')) {
+-	exit('Access Denied');
+-}
+-
+-class dbstuff {
+-	var $querynum = 0;
+-	var $link;
+-	var $histories;
+-	var $time;
+-	var $tablepre;
+-
+-	function connect($dbhost, $dbuser, $dbpw, $dbname = '', $dbcharset, $pconnect = 0, $tablepre='', $time = 0) {
+-		$this->time = $time;
+-		$this->tablepre = $tablepre;
+-		if($pconnect) {
+-			if(!$this->link = mysql_pconnect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		} else {
+-			if(!$this->link = mysql_connect($dbhost, $dbuser, $dbpw, 1)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		}
+-
+-		if($this->version() > '4.1') {
+-			if($dbcharset) {
+-				mysql_query("SET character_set_connection=".$dbcharset.", character_set_results=".$dbcharset.", character_set_client=binary", $this->link);
+-			}
+-
+-			if($this->version() > '5.0.1') {
+-				mysql_query("SET sql_mode=''", $this->link);
+-			}
+-		}
+-
+-		if($dbname) {
+-			mysql_select_db($dbname, $this->link);
+-		}
+-
+-	}
+-
+-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
+-		return mysql_fetch_array($query, $result_type);
+-	}
+-
+-	function result_first($sql, &$data) {
+-		$query = $this->query($sql);
+-		$data = $this->result($query, 0);
+-	}
+-
+-	function fetch_first($sql, &$arr) {
+-		$query = $this->query($sql);
+-		$arr = $this->fetch_array($query);
+-	}
+-
+-	function fetch_all($sql, &$arr) {
+-		$query = $this->query($sql);
+-		while($data = $this->fetch_array($query)) {
+-			$arr[] = $data;
+-		}
+-	}
+-
+-	function cache_gc() {
+-		$this->query("DELETE FROM {$this->tablepre}sqlcaches WHERE expiry<$this->time");
+-	}
+-
+-	function query($sql, $type = '', $cachetime = FALSE) {
+-		$func = $type == 'UNBUFFERED' && @function_exists('mysql_unbuffered_query') ? 'mysql_unbuffered_query' : 'mysql_query';
+-		if(!($query = $func($sql, $this->link)) && $type != 'SILENT') {
+-			$this->halt('SQL:', $sql);
+-		}
+-		$this->querynum++;
+-		$this->histories[] = $sql;
+-		return $query;
+-	}
+-
+-	function affected_rows() {
+-		return mysql_affected_rows($this->link);
+-	}
+-
+-	function error() {
+-		return (($this->link) ? mysql_error($this->link) : mysql_error());
+-	}
+-
+-	function errno() {
+-		return intval(($this->link) ? mysql_errno($this->link) : mysql_errno());
+-	}
+-
+-	function result($query, $row) {
+-		$query = @mysql_result($query, $row);
+-		return $query;
+-	}
+-
+-	function num_rows($query) {
+-		$query = mysql_num_rows($query);
+-		return $query;
+-	}
+-
+-	function num_fields($query) {
+-		return mysql_num_fields($query);
+-	}
+-
+-	function free_result($query) {
+-		return mysql_free_result($query);
+-	}
+-
+-	function insert_id() {
+-		return ($id = mysql_insert_id($this->link)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+-	}
+-
+-	function fetch_row($query) {
+-		$query = mysql_fetch_row($query);
+-		return $query;
+-	}
+-
+-	function fetch_fields($query) {
+-		return mysql_fetch_field($query);
+-	}
+-
+-	function version() {
+-		return mysql_get_server_info($this->link);
+-	}
+-
+-	function escape_string($str) {
+-		return mysql_escape_string($str);
+-	}
+-
+-	function close() {
+-		return mysql_close($this->link);
+-	}
+-
+-	function halt($message = '', $sql = '') {
+-		show_error('run_sql_error', $message.$sql.'<br /> Error:'.$this->error().'<br />Errno:'.$this->errno(), 0);
+-	}
+-}
+-
+-?>
+\ No newline at end of file
+diff --git a/install/include/install_var.php b/install/include/install_var.php
+index de9ccb1..3c8e5aa 100644
+--- a/install/include/install_var.php
++++ b/install/include/install_var.php
+@@ -63,7 +63,7 @@ define('UNDEFINE_FUNC', 32);
+ define('MISSING_PARAMETER', 33);
+ define('LOCK_FILE_NOT_TOUCH', 34);
+ 
+-$func_items = array(function_exists('mysql_connect') ? 'mysql_connect' : 'mysqli_connect', 'gethostbyname', 'file_get_contents', 'xml_parser_create');
++$func_items = array('mysqli_connect', 'gethostbyname', 'file_get_contents', 'xml_parser_create');
+ 
+ $filesock_items = array('fsockopen', 'pfsockopen', 'stream_socket_client', 'curl_init');
+ 
+@@ -419,4 +419,4 @@ $serialize_sql_setting = array (
+   ),
+ );
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/install/index.php b/install/index.php
+index 7510f17..b750b06 100644
+--- a/install/index.php
++++ b/install/index.php
+@@ -17,11 +17,7 @@ define('ROOT_PATH', dirname(__FILE__).'/../');
+ 
+ require ROOT_PATH.'./source/discuz_version.php';
+ require ROOT_PATH.'./install/include/install_var.php';
+-if(function_exists('mysql_connect')) {
+-	require ROOT_PATH.'./install/include/install_mysql.php';
+-} else {
+-	require ROOT_PATH.'./install/include/install_mysqli.php';
+-}
++require ROOT_PATH.'./install/include/install_mysqli.php';
+ require ROOT_PATH.'./install/include/install_function.php';
+ require ROOT_PATH.'./install/include/install_lang.php';
+ 
+@@ -277,11 +273,10 @@ if($method == 'show_license') {
+ 		if(empty($dbname)) {
+ 			show_msg('dbname_invalid', $dbname, 0);
+ 		} else {
+-			$mysqlmode = function_exists("mysql_connect") ? 'mysql' : 'mysqli';
+-			$link = ($mysqlmode == 'mysql') ? @mysql_connect($dbhost, $dbuser, $dbpw) : new mysqli($dbhost, $dbuser, $dbpw);
++			$link = new mysqli($dbhost, $dbuser, $dbpw);
+ 			if(!$link) {
+-				$errno = ($mysqlmode == 'mysql') ? mysql_errno($link) : $link->errno;
+-				$error = ($mysqlmode == 'mysql') ? mysql_error($link) : $link->error;
++				$errno = $link->errno;
++				$error = $link->error;
+ 				if($errno == 1045) {
+ 					show_msg('database_errno_1045', $error, 0);
+ 				} elseif($errno == 2003) {
+@@ -290,29 +285,13 @@ if($method == 'show_license') {
+ 					show_msg('database_connect_error', $error, 0);
+ 				}
+ 			}
+-			$mysql_version = ($mysqlmode == 'mysql') ? mysql_get_server_info() : $link->server_info;
+-			if($mysql_version > '4.1') {
+-				if($mysqlmode == 'mysql') {
+-					mysql_query("CREATE DATABASE IF NOT EXISTS `$dbname` DEFAULT CHARACTER SET ".DBCHARSET, $link);
+-				} else {
+-					$link->query("CREATE DATABASE IF NOT EXISTS `$dbname` DEFAULT CHARACTER SET ".DBCHARSET);
+-				}
+-			} else {
+-				if($mysqlmode == 'mysql') {
+-					mysql_query("CREATE DATABASE IF NOT EXISTS `$dbname`", $link);
+-				} else {
+-					$link->query("CREATE DATABASE IF NOT EXISTS `$dbname`");
+-				}
+-			}
++			$mysql_version = $link->server_info;
++			$link->query("CREATE DATABASE IF NOT EXISTS `$dbname` DEFAULT CHARACTER SET ".DBCHARSET);
+ 
+-			if(($mysqlmode == 'mysql') ? mysql_errno($link) : $link->errno) {
+-				show_msg('database_errno_1044', ($mysqlmode == 'mysql') ? mysql_error($link) : $link->error, 0);
+-			}
+-			if($mysqlmode == 'mysql') {
+-				mysql_close($link);
+-			} else {
+-				$link->close();
++			if($link->errno) {
++				show_msg('database_errno_1044', $link->error, 0);
+ 			}
++			$link->close();
+ 		}
+ 
+ 		if(strpos($tablepre, '.') !== false || intval($tablepre{0})) {
+@@ -501,4 +480,4 @@ if($method == 'show_license') {
+ 	} else {
+ 		show_msg('tablepre_exists', $tablepre, 0);
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/source/class/db/db_driver_mysql.php b/source/class/db/db_driver_mysql.php
+deleted file mode 100644
+index 5559c92..0000000
+--- a/source/class/db/db_driver_mysql.php
++++ /dev/null
+@@ -1,229 +0,0 @@
+-<?php
+-
+-/**
+- *      [Discuz!] (C)2001-2099 Comsenz Inc.
+- *      This is NOT a freeware, use is subject to license terms
+- *
+- *      $Id: db_driver_mysql.php 33349 2013-05-30 09:00:26Z kamichen $
+- */
+-
+-if(!defined('IN_DISCUZ')) {
+-	exit('Access Denied');
+-}
+-
+-class db_driver_mysql
+-{
+-	var $tablepre;
+-	var $version = '';
+-	var $drivertype = 'mysql';
+-	var $querynum = 0;
+-	var $slaveid = 0;
+-	var $curlink;
+-	var $link = array();
+-	var $config = array();
+-	var $sqldebug = array();
+-	var $map = array();
+-
+-	function db_mysql($config = array()) {
+-		if(!empty($config)) {
+-			$this->set_config($config);
+-		}
+-	}
+-
+-	function set_config($config) {
+-		$this->config = &$config;
+-		$this->tablepre = $config['1']['tablepre'];
+-		if(!empty($this->config['map'])) {
+-			$this->map = $this->config['map'];
+-			for($i = 1; $i <= 100; $i++) {
+-				if(isset($this->map['forum_thread'])) {
+-					$this->map['forum_thread_'.$i] = $this->map['forum_thread'];
+-				}
+-				if(isset($this->map['forum_post'])) {
+-					$this->map['forum_post_'.$i] = $this->map['forum_post'];
+-				}
+-				if(isset($this->map['forum_attachment']) && $i <= 10) {
+-					$this->map['forum_attachment_'.($i-1)] = $this->map['forum_attachment'];
+-				}
+-			}
+-			if(isset($this->map['common_member'])) {
+-				$this->map['common_member_archive'] =
+-				$this->map['common_member_count'] = $this->map['common_member_count_archive'] =
+-				$this->map['common_member_status'] = $this->map['common_member_status_archive'] =
+-				$this->map['common_member_profile'] = $this->map['common_member_profile_archive'] =
+-				$this->map['common_member_field_forum'] = $this->map['common_member_field_forum_archive'] =
+-				$this->map['common_member_field_home'] = $this->map['common_member_field_home_archive'] =
+-				$this->map['common_member_validate'] = $this->map['common_member_verify'] =
+-				$this->map['common_member_verify_info'] = $this->map['common_member'];
+-			}
+-		}
+-	}
+-
+-	function connect($serverid = 1) {
+-
+-		if(empty($this->config) || empty($this->config[$serverid])) {
+-			$this->halt('config_db_not_found');
+-		}
+-
+-		$this->link[$serverid] = $this->_dbconnect(
+-			$this->config[$serverid]['dbhost'],
+-			$this->config[$serverid]['dbuser'],
+-			$this->config[$serverid]['dbpw'],
+-			$this->config[$serverid]['dbcharset'],
+-			$this->config[$serverid]['dbname'],
+-			$this->config[$serverid]['pconnect']
+-			);
+-		$this->curlink = $this->link[$serverid];
+-
+-	}
+-
+-	function _dbconnect($dbhost, $dbuser, $dbpw, $dbcharset, $dbname, $pconnect, $halt = true) {
+-
+-		if($pconnect) {
+-			$link = @mysql_pconnect($dbhost, $dbuser, $dbpw, MYSQL_CLIENT_COMPRESS);
+-		} else {
+-			$link = @mysql_connect($dbhost, $dbuser, $dbpw, 1, MYSQL_CLIENT_COMPRESS);
+-		}
+-		if(!$link) {
+-			$halt && $this->halt('notconnect', $this->errno());
+-		} else {
+-			$this->curlink = $link;
+-			if($this->version() > '4.1') {
+-				$dbcharset = $dbcharset ? $dbcharset : $this->config[1]['dbcharset'];
+-				$serverset = $dbcharset ? 'character_set_connection='.$dbcharset.', character_set_results='.$dbcharset.', character_set_client=binary' : '';
+-				$serverset .= $this->version() > '5.0.1' ? ((empty($serverset) ? '' : ',').'sql_mode=\'\'') : '';
+-				$serverset && mysql_query("SET $serverset", $link);
+-			}
+-			$dbname && @mysql_select_db($dbname, $link);
+-		}
+-		return $link;
+-	}
+-
+-	function table_name($tablename) {
+-		if(!empty($this->map) && !empty($this->map[$tablename])) {
+-			$id = $this->map[$tablename];
+-			if(!$this->link[$id]) {
+-				$this->connect($id);
+-			}
+-			$this->curlink = $this->link[$id];
+-		} else {
+-			$this->curlink = $this->link[1];
+-		}
+-		return $this->tablepre.$tablename;
+-	}
+-
+-	function select_db($dbname) {
+-		return mysql_select_db($dbname, $this->curlink);
+-	}
+-
+-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
+-		if($result_type == 'MYSQL_ASSOC') $result_type = MYSQL_ASSOC;
+-		return mysql_fetch_array($query, $result_type);
+-	}
+-
+-	function fetch_first($sql) {
+-		return $this->fetch_array($this->query($sql));
+-	}
+-
+-	function result_first($sql) {
+-		return $this->result($this->query($sql), 0);
+-	}
+-
+-	public function query($sql, $silent = false, $unbuffered = false) {
+-		if(defined('DISCUZ_DEBUG') && DISCUZ_DEBUG) {
+-			$starttime = microtime(true);
+-		}
+-
+-		if('UNBUFFERED' === $silent) {
+-			$silent = false;
+-			$unbuffered = true;
+-		} elseif('SILENT' === $silent) {
+-			$silent = true;
+-			$unbuffered = false;
+-		}
+-
+-		$func = $unbuffered ? 'mysql_unbuffered_query' : 'mysql_query';
+-
+-		if(!($query = $func($sql, $this->curlink))) {
+-			if(in_array($this->errno(), array(2006, 2013)) && substr($silent, 0, 5) != 'RETRY') {
+-				$this->connect();
+-				return $this->query($sql, 'RETRY'.$silent);
+-			}
+-			if(!$silent) {
+-				$this->halt($this->error(), $this->errno(), $sql);
+-			}
+-		}
+-
+-		if(defined('DISCUZ_DEBUG') && DISCUZ_DEBUG) {
+-			$this->sqldebug[] = array($sql, number_format((microtime(true) - $starttime), 6), debug_backtrace(), $this->curlink);
+-		}
+-
+-		$this->querynum++;
+-		return $query;
+-	}
+-
+-	function affected_rows() {
+-		return mysql_affected_rows($this->curlink);
+-	}
+-
+-	function error() {
+-		return (($this->curlink) ? mysql_error($this->curlink) : mysql_error());
+-	}
+-
+-	function errno() {
+-		return intval(($this->curlink) ? mysql_errno($this->curlink) : mysql_errno());
+-	}
+-
+-	function result($query, $row = 0) {
+-		$query = @mysql_result($query, $row);
+-		return $query;
+-	}
+-
+-	function num_rows($query) {
+-		$query = mysql_num_rows($query);
+-		return $query;
+-	}
+-
+-	function num_fields($query) {
+-		return mysql_num_fields($query);
+-	}
+-
+-	function free_result($query) {
+-		return mysql_free_result($query);
+-	}
+-
+-	function insert_id() {
+-		return ($id = mysql_insert_id($this->curlink)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+-	}
+-
+-	function fetch_row($query) {
+-		$query = mysql_fetch_row($query);
+-		return $query;
+-	}
+-
+-	function fetch_fields($query) {
+-		return mysql_fetch_field($query);
+-	}
+-
+-	function version() {
+-		if(empty($this->version)) {
+-			$this->version = mysql_get_server_info($this->curlink);
+-		}
+-		return $this->version;
+-	}
+-
+-	function escape_string($str) {
+-		return mysql_escape_string($str);
+-	}
+-
+-	function close() {
+-		return mysql_close($this->curlink);
+-	}
+-
+-	function halt($message = '', $code = 0, $sql = '') {
+-		throw new DbException($message, $code, $sql);
+-	}
+-
+-}
+-
+-?>
+\ No newline at end of file
+diff --git a/source/class/db/db_driver_mysql_slave.php b/source/class/db/db_driver_mysql_slave.php
+deleted file mode 100644
+index 0c29d0e..0000000
+--- a/source/class/db/db_driver_mysql_slave.php
++++ /dev/null
+@@ -1,93 +0,0 @@
+-<?php
+-
+-/**
+- *      [Discuz!] (C)2001-2099 Comsenz Inc.
+- *      This is NOT a freeware, use is subject to license terms
+- *
+- *      $Id: db_driver_mysql_slave.php 31879 2012-10-18 09:27:24Z zhangguosheng $
+- */
+-
+-if(!defined('IN_DISCUZ')) {
+-	exit('Access Denied');
+-}
+-class db_driver_mysql_slave extends db_driver_mysql
+-{
+-
+-	public $slaveid = null;
+-
+-	public $slavequery = 0;
+-
+-	public $slaveexcept = false;
+-
+-	public $excepttables = array();
+-
+-	public $tablename = '';
+-
+-	protected $_weighttable = array();
+-
+-	public $serverid = null;
+-
+-	function set_config($config) {
+-		parent::set_config($config);
+-
+-		if($this->config['common']['slave_except_table']) {
+-			$this->excepttables = explode(',', str_replace(' ', '', $this->config['common']['slave_except_table']));
+-		}
+-	}
+-
+-	public function table_name($tablename) {
+-		$this->tablename = $tablename;
+-		if(!$this->slaveexcept && $this->excepttables) {
+-			$this->slaveexcept = in_array($tablename, $this->excepttables, true);
+-		}
+-		$this->serverid = isset($this->map[$this->tablename]) ? $this->map[$this->tablename] : 1;
+-		return $this->tablepre.$tablename;
+-	}
+-
+-	protected function _slave_connect() {
+-		if(!empty($this->config[$this->serverid]['slave'])) {
+-			$this->_choose_slave();
+-			if($this->slaveid) {
+-				if(!isset($this->link[$this->slaveid])) {
+-					$this->connect($this->slaveid);
+-				}
+-				$this->slavequery ++;
+-				$this->curlink = $this->link[$this->slaveid];
+-			}
+-			return true;
+-		} else {
+-			return false;
+-		}
+-	}
+-
+-	protected function _choose_slave(){
+-		if(!isset($this->_weighttable[$this->serverid])) {
+-			foreach ($this->config[$this->serverid]['slave'] as $key => $value) {
+-				$this->_weighttable[$this->serverid] .= str_repeat($key, 1 + intval($value['weight']));
+-			}
+-		}
+-		$sid = $this->_weighttable[$this->serverid][mt_rand(0, strlen($this->_weighttable[$this->serverid]) -1)];
+-		$this->slaveid = $this->serverid.'_'.$sid;
+-		if(!isset($this->config[$this->slaveid])) {
+-			$this->config[$this->slaveid] = $this->config[$this->serverid]['slave'][$sid];
+-		}
+-	}
+-
+-	protected function _master_connect() {
+-		if(!$this->link[$this->serverid]) {
+-			$this->connect($this->serverid);
+-		}
+-		$this->curlink = $this->link[$this->serverid];
+-	}
+-
+-	public function query($sql, $silent = false, $unbuffered = false) {
+-		if(!(!$this->slaveexcept && strtoupper(substr($sql, 0 , 6)) === 'SELECT' && $this->_slave_connect())) {
+-			$this->_master_connect();
+-		}
+-		$this->tablename = '';
+-		$this->slaveexcept = false;
+-		return parent::query($sql, $silent, $unbuffered);
+-	}
+-
+-}
+-?>
+\ No newline at end of file
+diff --git a/source/class/discuz/discuz_application.php b/source/class/discuz/discuz_application.php
+index eade6de..bae3bef 100644
+--- a/source/class/discuz/discuz_application.php
++++ b/source/class/discuz/discuz_application.php
+@@ -76,9 +76,6 @@ class discuz_application extends discuz_base{
+ 	private function _init_env() {
+ 
+ 		error_reporting(E_ERROR);
+-		if(PHP_VERSION < '5.3.0') {
+-			set_magic_quotes_runtime(0);
+-		}
+ 
+ 		define('MAGIC_QUOTES_GPC', function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc());
+ 		define('ICONV_ENABLE', function_exists('iconv'));
+@@ -392,9 +389,9 @@ class discuz_application extends discuz_base{
+ 
+ 	private function _init_db() {
+ 		if($this->init_db) {
+-			$driver = function_exists('mysql_connect') ? 'db_driver_mysql' : 'db_driver_mysqli';
++			$driver = 'db_driver_mysqli';
+ 			if(getglobal('config/db/slave')) {
+-				$driver = function_exists('mysql_connect') ? 'db_driver_mysql_slave' : 'db_driver_mysqli_slave';
++				$driver = 'db_driver_mysqli_slave';
+ 			}
+ 			DB::init($driver, $this->config['db']);
+ 		}
+@@ -843,4 +840,4 @@ class discuz_application extends discuz_base{
+ 	}
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/source/class/discuz/discuz_database.php b/source/class/discuz/discuz_database.php
+index fc56d49..a79783a 100644
+--- a/source/class/discuz/discuz_database.php
++++ b/source/class/discuz/discuz_database.php
+@@ -174,7 +174,7 @@ class discuz_database {
+ 	public static function quote($str, $noarray = false) {
+ 
+ 		if (is_string($str))
+-			return '\'' . mysql_escape_string($str) . '\'';
++			return '\'' . self::$db->escape_string($str) . '\'';
+ 
+ 		if (is_int($str) or is_float($str))
+ 			return '\'' . $str . '\'';
+@@ -471,4 +471,4 @@ class discuz_database_safecheck {
+ 
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/uc_client/client.php b/uc_client/client.php
+index 6aaf0f9..35b6ab2 100644
+--- a/uc_client/client.php
++++ b/uc_client/client.php
+@@ -134,11 +134,7 @@ function uc_api_input($data) {
+ function uc_api_mysql($model, $action, $args=array()) {
+ 	global $uc_controls;
+ 	if(empty($uc_controls[$model])) {
+-		if(function_exists("mysql_connect")) {
+-			include_once UC_ROOT.'./lib/db.class.php';
+-		} else {
+-			include_once UC_ROOT.'./lib/dbi.class.php';
+-		}
++		include_once UC_ROOT.'./lib/dbi.class.php';
+ 		include_once UC_ROOT.'./model/base.php';
+ 		include_once UC_ROOT."./control/$model.php";
+ 		eval("\$uc_controls['$model'] = new {$model}control();");
+@@ -638,4 +634,4 @@ function uc_check_version() {
+ 	return is_array($data) ? $data : $return;
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/uc_client/lib/db.class.php b/uc_client/lib/db.class.php
+deleted file mode 100644
+index 06df45e..0000000
+--- a/uc_client/lib/db.class.php
++++ /dev/null
+@@ -1,176 +0,0 @@
+-<?php
+-
+-/*
+-	[UCenter] (C)2001-2099 Comsenz Inc.
+-	This is NOT a freeware, use is subject to license terms
+-
+-	$Id: db.class.php 1171 2014-11-03 03:33:47Z hypowang $
+-*/
+-
+-
+-class ucclient_db {
+-	var $querynum = 0;
+-	var $link;
+-	var $histories;
+-
+-	var $dbhost;
+-	var $dbuser;
+-	var $dbpw;
+-	var $dbcharset;
+-	var $pconnect;
+-	var $tablepre;
+-	var $time;
+-
+-	var $goneaway = 5;
+-
+-	function connect($dbhost, $dbuser, $dbpw, $dbname = '', $dbcharset = '', $pconnect = 0, $tablepre='', $time = 0) {
+-		$this->dbhost = $dbhost;
+-		$this->dbuser = $dbuser;
+-		$this->dbpw = $dbpw;
+-		$this->dbname = $dbname;
+-		$this->dbcharset = $dbcharset;
+-		$this->pconnect = $pconnect;
+-		$this->tablepre = $tablepre;
+-		$this->time = $time;
+-
+-		if($pconnect) {
+-			if(!$this->link = mysql_pconnect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		} else {
+-			if(!$this->link = mysql_connect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		}
+-
+-		if($this->version() > '4.1') {
+-			if($dbcharset) {
+-				mysql_query("SET character_set_connection=".$dbcharset.", character_set_results=".$dbcharset.", character_set_client=binary", $this->link);
+-			}
+-
+-			if($this->version() > '5.0.1') {
+-				mysql_query("SET sql_mode=''", $this->link);
+-			}
+-		}
+-
+-		if($dbname) {
+-			mysql_select_db($dbname, $this->link);
+-		}
+-
+-	}
+-
+-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
+-		return mysql_fetch_array($query, $result_type);
+-	}
+-
+-	function result_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->result($query, 0);
+-	}
+-
+-	function fetch_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->fetch_array($query);
+-	}
+-
+-	function fetch_all($sql, $id = '') {
+-		$arr = array();
+-		$query = $this->query($sql);
+-		while($data = $this->fetch_array($query)) {
+-			$id ? $arr[$data[$id]] = $data : $arr[] = $data;
+-		}
+-		return $arr;
+-	}
+-
+-	function cache_gc() {
+-		$this->query("DELETE FROM {$this->tablepre}sqlcaches WHERE expiry<$this->time");
+-	}
+-
+-	function query($sql, $type = '', $cachetime = FALSE) {
+-		$func = $type == 'UNBUFFERED' && @function_exists('mysql_unbuffered_query') ? 'mysql_unbuffered_query' : 'mysql_query';
+-		if(!($query = $func($sql, $this->link)) && $type != 'SILENT') {
+-			$this->halt('MySQL Query Error', $sql);
+-		}
+-		$this->querynum++;
+-		$this->histories[] = $sql;
+-		return $query;
+-	}
+-
+-	function affected_rows() {
+-		return mysql_affected_rows($this->link);
+-	}
+-
+-	function error() {
+-		return (($this->link) ? mysql_error($this->link) : mysql_error());
+-	}
+-
+-	function errno() {
+-		return intval(($this->link) ? mysql_errno($this->link) : mysql_errno());
+-	}
+-
+-	function result($query, $row) {
+-		$query = @mysql_result($query, $row);
+-		return $query;
+-	}
+-
+-	function num_rows($query) {
+-		$query = mysql_num_rows($query);
+-		return $query;
+-	}
+-
+-	function num_fields($query) {
+-		return mysql_num_fields($query);
+-	}
+-
+-	function free_result($query) {
+-		return mysql_free_result($query);
+-	}
+-
+-	function insert_id() {
+-		return ($id = mysql_insert_id($this->link)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+-	}
+-
+-	function fetch_row($query) {
+-		$query = mysql_fetch_row($query);
+-		return $query;
+-	}
+-
+-	function fetch_fields($query) {
+-		return mysql_fetch_field($query);
+-	}
+-
+-	function version() {
+-		return mysql_get_server_info($this->link);
+-	}
+-
+-	function escape_string($str) {
+-		return mysql_escape_string($str);
+-	}
+-
+-	function close() {
+-		return mysql_close($this->link);
+-	}
+-
+-	function halt($message = '', $sql = '') {
+-		$error = mysql_error();
+-		$errorno = mysql_errno();
+-		if($errorno == 2006 && $this->goneaway-- > 0) {
+-			$this->connect($this->dbhost, $this->dbuser, $this->dbpw, $this->dbname, $this->dbcharset, $this->pconnect, $this->tablepre, $this->time);
+-			$this->query($sql);
+-		} else {
+-			$s = '';
+-			if($message) {
+-				$s = "<b>UCenter info:</b> $message<br />";
+-			}
+-			if($sql) {
+-				$s .= '<b>SQL:</b>'.htmlspecialchars($sql).'<br />';
+-			}
+-			$s .= '<b>Error:</b>'.$error.'<br />';
+-			$s .= '<b>Errno:</b>'.$errorno.'<br />';
+-			$s = str_replace(UC_DBTABLEPRE, '[Table]', $s);
+-			exit($s);
+-		}
+-	}
+-}
+-
+-?>
+\ No newline at end of file
+diff --git a/uc_client/model/base.php b/uc_client/model/base.php
+index c19837e..31bb418 100644
+--- a/uc_client/model/base.php
++++ b/uc_client/model/base.php
+@@ -70,11 +70,7 @@ class base {
+ 	}
+ 
+ 	function init_db() {
+-		if(function_exists("mysql_connect")) {
+-			require_once UC_ROOT.'lib/db.class.php';
+-		} else {
+-			require_once UC_ROOT.'lib/dbi.class.php';
+-		}
++		require_once UC_ROOT.'lib/dbi.class.php';
+ 		$this->db = new ucclient_db();
+ 		$this->db->connect(UC_DBHOST, UC_DBUSER, UC_DBPW, '', UC_DBCHARSET, UC_DBCONNECT, UC_DBTABLEPRE);
+ 	}
+@@ -251,4 +247,4 @@ class base {
+ 
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+diff --git a/uc_server/admin.php b/uc_server/admin.php
+index 49fccc9..2bab28f 100644
+--- a/uc_server/admin.php
++++ b/uc_server/admin.php
+@@ -8,7 +8,6 @@
+ */
+ 
+ error_reporting(0);
+-set_magic_quotes_runtime(0);
+ 
+ $mtime = explode(' ', microtime());
+ $starttime = $mtime[1] + $mtime[0];
+diff --git a/uc_server/api/dbbak.php b/uc_server/api/dbbak.php
+index 5e045dd..e24aac1 100644
+--- a/uc_server/api/dbbak.php
++++ b/uc_server/api/dbbak.php
+@@ -68,138 +68,6 @@ if($timestamp - $get['time'] > 3600) {
+ }
+ $get['time'] = $timestamp;
+ 
+-class dbstuff {
+-	var $querynum = 0;
+-	var $link;
+-	var $histories;
+-	var $time;
+-	var $tablepre;
+-
+-	function connect($dbhost, $dbuser, $dbpw, $dbname = '', $dbcharset, $pconnect = 0, $tablepre='', $time = 0) {
+-		$this->time = $time;
+-		$this->tablepre = $tablepre;
+-		if($pconnect) {
+-			if(!$this->link = mysql_pconnect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		} else {
+-			if(!$this->link = mysql_connect($dbhost, $dbuser, $dbpw, 1)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		}
+-
+-		if($this->version() > '4.1') {
+-			if($dbcharset) {
+-				mysql_query("SET character_set_connection=".$dbcharset.", character_set_results=".$dbcharset.", character_set_client=binary", $this->link);
+-			}
+-
+-			if($this->version() > '5.0.1') {
+-				mysql_query("SET sql_mode=''", $this->link);
+-			}
+-		}
+-
+-		if($dbname) {
+-			mysql_select_db($dbname, $this->link);
+-		}
+-
+-	}
+-
+-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
+-		return mysql_fetch_array($query, $result_type);
+-	}
+-
+-	function result_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->result($query, 0);
+-	}
+-
+-	function fetch_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->fetch_array($query);
+-	}
+-
+-	function fetch_all($sql) {
+-		$arr = array();
+-		$query = $this->query($sql);
+-		while($data = $this->fetch_array($query)) {
+-			$arr[] = $data;
+-		}
+-		return $arr;
+-	}
+-
+-	function cache_gc() {
+-		$this->query("DELETE FROM {$this->tablepre}sqlcaches WHERE expiry<$this->time");
+-	}
+-
+-	function query($sql, $type = '', $cachetime = FALSE) {
+-		$func = $type == 'UNBUFFERED' && @function_exists('mysql_unbuffered_query') ? 'mysql_unbuffered_query' : 'mysql_query';
+-		if(!($query = $func($sql, $this->link)) && $type != 'SILENT') {
+-			$this->halt('MySQL Query Error', $sql);
+-		}
+-		$this->querynum++;
+-		$this->histories[] = $sql;
+-		return $query;
+-	}
+-
+-	function affected_rows() {
+-		return mysql_affected_rows($this->link);
+-	}
+-
+-	function error() {
+-		return (($this->link) ? mysql_error($this->link) : mysql_error());
+-	}
+-
+-	function errno() {
+-		return intval(($this->link) ? mysql_errno($this->link) : mysql_errno());
+-	}
+-
+-	function result($query, $row) {
+-		$query = @mysql_result($query, $row);
+-		return $query;
+-	}
+-
+-	function num_rows($query) {
+-		$query = mysql_num_rows($query);
+-		return $query;
+-	}
+-
+-	function num_fields($query) {
+-		return mysql_num_fields($query);
+-	}
+-
+-	function free_result($query) {
+-		return mysql_free_result($query);
+-	}
+-
+-	function insert_id() {
+-		return ($id = mysql_insert_id($this->link)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+-	}
+-
+-	function fetch_row($query) {
+-		$query = mysql_fetch_row($query);
+-		return $query;
+-	}
+-
+-	function fetch_fields($query) {
+-		return mysql_fetch_field($query);
+-	}
+-
+-	function version() {
+-		return mysql_get_server_info($this->link);
+-	}
+-
+-	function escape_string($str) {
+-		return mysql_escape_string($str);
+-	}
+-
+-	function close() {
+-		return mysql_close($this->link);
+-	}
+-
+-	function halt($message = '', $sql = '') {
+-		api_msg('run_sql_error', $message.'<br /><br />'.$sql.'<br /> '.mysql_error());
+-	}
+-}
+ class dbstuffi {
+ 	var $querynum = 0;
+ 	var $link;
+@@ -329,7 +197,7 @@ class dbstuffi {
+ 	}
+ }
+ 
+-$db = function_exists("mysql_connect") ? new dbstuff() : new dbstuffi();
++$db = new dbstuffi();
+ $version = '';
+ if($apptype == 'discuz') {
+ 
+diff --git a/uc_server/index.php b/uc_server/index.php
+index f2a201f..4e43354 100644
+--- a/uc_server/index.php
++++ b/uc_server/index.php
+@@ -8,7 +8,6 @@
+ */
+ 
+ error_reporting(0);
+-set_magic_quotes_runtime(0);
+ 
+ $mtime = explode(' ', microtime());
+ $starttime = $mtime[1] + $mtime[0];
+diff --git a/uc_server/install/db.class.php b/uc_server/install/db.class.php
+deleted file mode 100644
+index b10316d..0000000
+--- a/uc_server/install/db.class.php
++++ /dev/null
+@@ -1,145 +0,0 @@
+-<?php
+-
+-/*
+-	[Discuz!] (C)2001-2099 Comsenz Inc.
+-	This is NOT a freeware, use is subject to license terms
+-
+-	$Id: db.class.php 1152 2013-05-28 09:11:04Z kamichen $
+-*/
+-
+-if(!defined('IN_COMSENZ')) {
+-	exit('Access Denied');
+-}
+-
+-class dbstuff {
+-	var $querynum = 0;
+-	var $link;
+-	var $histories;
+-	var $time;
+-	var $tablepre;
+-
+-	function connect($dbhost, $dbuser, $dbpw, $dbname = '', $dbcharset, $pconnect = 0, $tablepre='', $time = 0) {
+-		$this->time = $time;
+-		$this->tablepre = $tablepre;
+-		if($pconnect) {
+-			if(!$this->link = mysql_pconnect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		} else {
+-			if(!$this->link = mysql_connect($dbhost, $dbuser, $dbpw, 1)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		}
+-
+-		if($this->version() > '4.1') {
+-			if($dbcharset) {
+-				mysql_query("SET character_set_connection=".$dbcharset.", character_set_results=".$dbcharset.", character_set_client=binary", $this->link);
+-			}
+-
+-			if($this->version() > '5.0.1') {
+-				mysql_query("SET sql_mode=''", $this->link);
+-			}
+-		}
+-
+-		if($dbname) {
+-			mysql_select_db($dbname, $this->link);
+-		}
+-
+-	}
+-
+-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
+-		return mysql_fetch_array($query, $result_type);
+-	}
+-
+-	function result_first($sql, &$data) {
+-		$query = $this->query($sql);
+-		$data = $this->result($query, 0);
+-	}
+-
+-	function fetch_first($sql, &$arr) {
+-		$query = $this->query($sql);
+-		$arr = $this->fetch_array($query);
+-	}
+-
+-	function fetch_all($sql, &$arr) {
+-		$query = $this->query($sql);
+-		while($data = $this->fetch_array($query)) {
+-			$arr[] = $data;
+-		}
+-	}
+-
+-	function cache_gc() {
+-		$this->query("DELETE FROM {$this->tablepre}sqlcaches WHERE expiry<$this->time");
+-	}
+-
+-	function query($sql, $type = '', $cachetime = FALSE) {
+-		$func = $type == 'UNBUFFERED' && @function_exists('mysql_unbuffered_query') ? 'mysql_unbuffered_query' : 'mysql_query';
+-		if(!($query = $func($sql, $this->link)) && $type != 'SILENT') {
+-			$this->halt('MySQL Query Error', $sql);
+-		}
+-		$this->querynum++;
+-		$this->histories[] = $sql;
+-		return $query;
+-	}
+-
+-	function affected_rows() {
+-		return mysql_affected_rows($this->link);
+-	}
+-
+-	function error() {
+-		return (($this->link) ? mysql_error($this->link) : mysql_error());
+-	}
+-
+-	function errno() {
+-		return intval(($this->link) ? mysql_errno($this->link) : mysql_errno());
+-	}
+-
+-	function result($query, $row) {
+-		$query = @mysql_result($query, $row);
+-		return $query;
+-	}
+-
+-	function num_rows($query) {
+-		$query = mysql_num_rows($query);
+-		return $query;
+-	}
+-
+-	function num_fields($query) {
+-		return mysql_num_fields($query);
+-	}
+-
+-	function free_result($query) {
+-		return mysql_free_result($query);
+-	}
+-
+-	function insert_id() {
+-		return ($id = mysql_insert_id($this->link)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+-	}
+-
+-	function fetch_row($query) {
+-		$query = mysql_fetch_row($query);
+-		return $query;
+-	}
+-
+-	function fetch_fields($query) {
+-		return mysql_fetch_field($query);
+-	}
+-
+-	function version() {
+-		return mysql_get_server_info($this->link);
+-	}
+-
+-	function escape_string($str) {
+-		return mysql_escape_string($str);
+-	}
+-
+-	function close() {
+-		return mysql_close($this->link);
+-	}
+-
+-	function halt($message = '', $sql = '') {
+-		show_error('run_sql_error', $message.'<br /><br />'.$sql.'<br /> '.mysql_error(), 0);
+-	}
+-}
+-
+-?>
+\ No newline at end of file
+diff --git a/uc_server/install/func.inc.php b/uc_server/install/func.inc.php
+index 67b3806..440224a 100644
+--- a/uc_server/install/func.inc.php
++++ b/uc_server/install/func.inc.php
+@@ -58,14 +58,13 @@ function show_msg($error_no, $error_msg = 'ok', $success = 1, $quit = TRUE) {
+ }
+ 
+ function check_db($dbhost, $dbuser, $dbpw, $dbname, $tablepre) {
+-	if(!function_exists('mysql_connect') && !function_exists('mysqli_connect')) {
+-		show_msg('undefine_func', 'mysql_connect', 0);
++	if(!function_exists('mysqli_connect')) {
++		show_msg('undefine_func', 'mysqli_connect', 0);
+ 	}
+-	$mysqlmode = function_exists('mysql_connect') ? 'mysql' : 'mysqli';
+-	$link = ($mysqlmode == 'mysql') ? @mysql_connect($dbhost, $dbuser, $dbpw) : new mysqli($dbhost, $dbuser, $dbpw);
++	$link = new mysqli($dbhost, $dbuser, $dbpw);
+ 	if(!$link) {
+-		$errno = ($mysqlmode == 'mysql') ? mysql_errno() : mysqli_errno();
+-		$error = ($mysqlmode == 'mysql') ? mysql_error() : mysqli_error();
++		$errno = mysqli_errno();
++		$error = mysqli_error();
+ 		if($errno == 1045) {
+ 			show_msg('database_errno_1045', $error, 0);
+ 		} elseif($errno == 2003) {
+@@ -74,11 +73,11 @@ function check_db($dbhost, $dbuser, $dbpw, $dbname, $tablepre) {
+ 			show_msg('database_connect_error', $error, 0);
+ 		}
+ 	} else {
+-		if($query = (($mysqlmode == 'mysql') ? @mysql_query("SHOW TABLES FROM $dbname") : $link->query("SHOW TABLES FROM $dbname"))) {
++		if($query = $link->query("SHOW TABLES FROM $dbname")) {
+ 			if(!$query) {
+ 				return false;
+ 			}
+-			while($row = (($mysqlmode == 'mysql') ? mysql_fetch_row($query) : $query->fetch_row())) {
++			while($row = $query->fetch_row()) {
+ 				if(preg_match("/^$tablepre/", $row[0])) {
+ 					return false;
+ 				}
+@@ -1028,8 +1027,8 @@ function save_uc_config($config, $file) {
+ 	if($content = file_get_contents($file)) {
+ 		$content = trim($content);
+ 		$content = substr($content, -2) == '?>' ? substr($content, 0, -2) : $content;
+-		$link = mysql_connect($ucdbhost, $ucdbuser, $ucdbpw, 1);
+-		$uc_connnect = $link && mysql_select_db($ucdbname, $link) ? 'mysql' : '';
++		$link = new mysqli($ucdbhost, $ucdbuser, $ucdbpw, $ucdbname);
++		$uc_connnect = $link ? 'mysql' : '';
+ 		$content = insertconfig($content, "/define\('UC_CONNECT',\s*'.*?'\);/i", "define('UC_CONNECT', '$uc_connnect');");
+ 		$content = insertconfig($content, "/define\('UC_DBHOST',\s*'.*?'\);/i", "define('UC_DBHOST', '$ucdbhost');");
+ 		$content = insertconfig($content, "/define\('UC_DBUSER',\s*'.*?'\);/i", "define('UC_DBUSER', '$ucdbuser');");
+@@ -1078,4 +1077,4 @@ function dhtmlspecialchars($string, $flags = null) {
+ 		}
+ 	}
+ 	return $string;
+-}
+\ No newline at end of file
++}
+diff --git a/uc_server/lib/db.class.php b/uc_server/lib/db.class.php
+deleted file mode 100644
+index fc22be9..0000000
+--- a/uc_server/lib/db.class.php
++++ /dev/null
+@@ -1,176 +0,0 @@
+-<?php
+-
+-/*
+-	[UCenter] (C)2001-2099 Comsenz Inc.
+-	This is NOT a freeware, use is subject to license terms
+-
+-	$Id: db.class.php 1152 2013-05-28 09:11:04Z kamichen $
+-*/
+-
+-
+-class ucserver_db {
+-	var $querynum = 0;
+-	var $link;
+-	var $histories;
+-
+-	var $dbhost;
+-	var $dbuser;
+-	var $dbpw;
+-	var $dbcharset;
+-	var $pconnect;
+-	var $tablepre;
+-	var $time;
+-
+-	var $goneaway = 5;
+-
+-	function connect($dbhost, $dbuser, $dbpw, $dbname = '', $dbcharset = '', $pconnect = 0, $tablepre='', $time = 0) {
+-		$this->dbhost = $dbhost;
+-		$this->dbuser = $dbuser;
+-		$this->dbpw = $dbpw;
+-		$this->dbname = $dbname;
+-		$this->dbcharset = $dbcharset;
+-		$this->pconnect = $pconnect;
+-		$this->tablepre = $tablepre;
+-		$this->time = $time;
+-
+-		if($pconnect) {
+-			if(!$this->link = mysql_pconnect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		} else {
+-			if(!$this->link = mysql_connect($dbhost, $dbuser, $dbpw)) {
+-				$this->halt('Can not connect to MySQL server');
+-			}
+-		}
+-
+-		if($this->version() > '4.1') {
+-			if($dbcharset) {
+-				mysql_query("SET character_set_connection=".$dbcharset.", character_set_results=".$dbcharset.", character_set_client=binary", $this->link);
+-			}
+-
+-			if($this->version() > '5.0.1') {
+-				mysql_query("SET sql_mode=''", $this->link);
+-			}
+-		}
+-
+-		if($dbname) {
+-			mysql_select_db($dbname, $this->link);
+-		}
+-
+-	}
+-
+-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
+-		return mysql_fetch_array($query, $result_type);
+-	}
+-
+-	function result_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->result($query, 0);
+-	}
+-
+-	function fetch_first($sql) {
+-		$query = $this->query($sql);
+-		return $this->fetch_array($query);
+-	}
+-
+-	function fetch_all($sql, $id = '') {
+-		$arr = array();
+-		$query = $this->query($sql);
+-		while($data = $this->fetch_array($query)) {
+-			$id ? $arr[$data[$id]] = $data : $arr[] = $data;
+-		}
+-		return $arr;
+-	}
+-
+-	function cache_gc() {
+-		$this->query("DELETE FROM {$this->tablepre}sqlcaches WHERE expiry<$this->time");
+-	}
+-
+-	function query($sql, $type = '', $cachetime = FALSE) {
+-		$func = $type == 'UNBUFFERED' && @function_exists('mysql_unbuffered_query') ? 'mysql_unbuffered_query' : 'mysql_query';
+-		if(!($query = $func($sql, $this->link)) && $type != 'SILENT') {
+-			$this->halt('MySQL Query Error', $sql);
+-		}
+-		$this->querynum++;
+-		$this->histories[] = $sql;
+-		return $query;
+-	}
+-
+-	function affected_rows() {
+-		return mysql_affected_rows($this->link);
+-	}
+-
+-	function error() {
+-		return (($this->link) ? mysql_error($this->link) : mysql_error());
+-	}
+-
+-	function errno() {
+-		return intval(($this->link) ? mysql_errno($this->link) : mysql_errno());
+-	}
+-
+-	function result($query, $row) {
+-		$query = @mysql_result($query, $row);
+-		return $query;
+-	}
+-
+-	function num_rows($query) {
+-		$query = mysql_num_rows($query);
+-		return $query;
+-	}
+-
+-	function num_fields($query) {
+-		return mysql_num_fields($query);
+-	}
+-
+-	function free_result($query) {
+-		return mysql_free_result($query);
+-	}
+-
+-	function insert_id() {
+-		return ($id = mysql_insert_id($this->link)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+-	}
+-
+-	function fetch_row($query) {
+-		$query = mysql_fetch_row($query);
+-		return $query;
+-	}
+-
+-	function fetch_fields($query) {
+-		return mysql_fetch_field($query);
+-	}
+-
+-	function version() {
+-		return mysql_get_server_info($this->link);
+-	}
+-
+-	function escape_string($str) {
+-		return mysql_escape_string($str);
+-	}
+-
+-	function close() {
+-		return mysql_close($this->link);
+-	}
+-
+-	function halt($message = '', $sql = '') {
+-		$error = mysql_error();
+-		$errorno = mysql_errno();
+-		if($errorno == 2006 && $this->goneaway-- > 0) {
+-			$this->connect($this->dbhost, $this->dbuser, $this->dbpw, $this->dbname, $this->dbcharset, $this->pconnect, $this->tablepre, $this->time);
+-			$this->query($sql);
+-		} else {
+-			$s = '';
+-			if($message) {
+-				$s = "<b>UCenter info:</b> $message<br />";
+-			}
+-			if($sql) {
+-				$s .= '<b>SQL:</b>'.dhtmlspecialchars($sql).'<br />';
+-			}
+-			$s .= '<b>Error:</b>'.$error.'<br />';
+-			$s .= '<b>Errno:</b>'.$errorno.'<br />';
+-			$s = str_replace(UC_DBTABLEPRE, '[Table]', $s);
+-			exit($s);
+-		}
+-	}
+-}
+-
+-?>
+\ No newline at end of file
+diff --git a/uc_server/model/base.php b/uc_server/model/base.php
+index a3fad24..4aa1eb0 100644
+--- a/uc_server/model/base.php
++++ b/uc_server/model/base.php
+@@ -92,11 +92,7 @@ class base {
+ 	}
+ 
+ 	function init_db() {
+-		if(function_exists("mysql_connect")) {
+-			require_once UC_ROOT.'lib/db.class.php';
+-		} else {
+-			require_once UC_ROOT.'lib/dbi.class.php';
+-		}
++		require_once UC_ROOT.'lib/dbi.class.php';
+ 		$this->db = new ucserver_db();
+ 		$this->db->connect(UC_DBHOST, UC_DBUSER, UC_DBPW, UC_DBNAME, UC_DBCHARSET, UC_DBCONNECT, UC_DBTABLEPRE);
+ 	}
+@@ -482,4 +478,4 @@ class base {
+ 
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+-- 
+2.5.1.windows.1
+
+From d4d338dd875534b12161da6d904e628b7a894f9e Mon Sep 17 00:00:00 2001
+From: BranchZero Sun <branchzero@gmail.com>
+Date: Sat, 5 Dec 2015 16:25:50 +0800
+Subject: [PATCH] add ignore and readme.md
+
+---
+ .gitignore |  2 ++
+ readme.md  | 22 ++++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 readme.md
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..58e90b3
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,2 @@
++data/
++config/
+diff --git a/readme.md b/readme.md
+new file mode 100644
+index 0000000..06dde3a
+--- /dev/null
++++ b/readme.md
+@@ -0,0 +1,22 @@
++#Discuz X3.2 UTF-8 20150609 For PHP7
++
++This is a a PHP7 Port of Discuz! X3.2, based on Discuz X3.2 UTF-8 20150609.
++*Please Do Not Use For Production*
++
++###Changes
++
++  - Remove MySQL and Switch to MySQLi
++  - Modify *preg_replace e modifier* to *preg_replace_callback*
++
++###Notice
++
++There are still some bugs remaining to fix.
++
++###Known Bugs
++
++  - Template Engine's Eval tags seem to work abnormally. (seems like preg_replace with e modifier has addslashes but preg_replace_callback one doesn't to do)
++
++###Other
++
++Copyright: Comsenz Inc.
++Modifier: BranchZero Sun
+-- 
+2.5.1.windows.1
+
