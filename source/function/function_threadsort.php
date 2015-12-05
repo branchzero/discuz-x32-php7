@@ -274,11 +274,11 @@ function showsorttemplate($sortid, $fid, $sortoptionarray, $templatearray, $thre
 		foreach($sortoptionarray as $sortid => $optionarray) {
 			foreach($optionarray as $option) {
 				if($option['subjectshow']) {
-					$searchtitle[$sortid][] = '/{('.$option['identifier'].')}/e';
-					$searchvalue[$sortid][] = '/\[('.$option['identifier'].')value\]/e';
-					$searchvalue[$sortid][] = '/{('.$option['identifier'].')_value}/e';
-					$searchunit[$sortid][] = '/\[('.$option['identifier'].')unit\]/e';
-					$searchunit[$sortid][] = '/{('.$option['identifier'].')_unit}/e';
+					$searchtitle[$sortid][] = '/{('.$option['identifier'].')}/';
+					$searchvalue[$sortid][] = '/\[('.$option['identifier'].')value\]/';
+					$searchvalue[$sortid][] = '/{('.$option['identifier'].')_value}/';
+					$searchunit[$sortid][] = '/\[('.$option['identifier'].')unit\]/';
+					$searchunit[$sortid][] = '/{('.$option['identifier'].')_unit}/';
 				}
 			}
 		}
@@ -294,9 +294,9 @@ function showsorttemplate($sortid, $fid, $sortoptionarray, $templatearray, $thre
 								$sortdata[$tid]['subject'],
 								"<a href=\"forum.php?mod=viewthread&tid=$tid\">\\1</a>"
 							), stripslashes($templatearray[$sortid]));
-			$stemplate[$sortid][$tid] = preg_replace($searchtitle[$sortid], "showlistoption('\\1', 'title', '$tid', '$sortid')", $stemplate[$sortid][$tid]);
-			$stemplate[$sortid][$tid] = preg_replace($searchvalue[$sortid], "showlistoption('\\1', 'value', '$tid', '$sortid')", $stemplate[$sortid][$tid]);
-			$stemplate[$sortid][$tid] = preg_replace($searchunit[$sortid], "showlistoption('\\1', 'unit', '$tid', '$sortid')", $stemplate[$sortid][$tid]);
+			$stemplate[$sortid][$tid] = preg_replace_callback($searchtitle[$sortid], function($matches) use($tid, $sortid) { return showlistoption($matches[1], 'title', $tid, $sortid); }, $stemplate[$sortid][$tid]);
+			$stemplate[$sortid][$tid] = preg_replace_callback($searchvalue[$sortid], function($matches) use($tid, $sortid) { return showlistoption($matches[1], 'value', $tid, $sortid); }, $stemplate[$sortid][$tid]);
+			$stemplate[$sortid][$tid] = preg_replace_callback($searchunit[$sortid], function($matches) use($tid, $sortid) { return showlistoption($matches[1], 'unit', $tid, $sortid); }, $stemplate[$sortid][$tid]);
 		}
 	}
 
