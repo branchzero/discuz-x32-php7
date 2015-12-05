@@ -444,21 +444,24 @@ function build_cache_setting() {
 	if($_G['setting']['rewritestatus'] || $output['str']['search']) {
 		if($_G['setting']['rewritestatus']) {
 			require_once libfile('function/admincp');
+			$output['preg'] = rewritedata(0);
 		}
-		foreach($data['footernavs'] as $id => $nav) {
-			$data['footernavs'][$id]['code'] = rewritereplace($nav['code']);
-		}
-		foreach($data['spacenavs'] as $id => $nav) {
-			$data['spacenavs'][$id]['code'] = rewritereplace($nav['code']);
-		}
-		foreach($data['mynavs'] as $id => $nav) {
-			$data['mynavs'][$id]['code'] = rewritereplace($nav['code']);
-		}
-		foreach($data['topnavs'] as $id => $nav) {
-			$data['topnavs'][$id]['code'] = rewritereplace($nav['code']);
-		}
-		foreach($data['plugins']['jsmenu'] as $key => $nav) {
-			$data['plugins']['jsmenu'][$key]['url'] = rewritereplace($nav['url']);
+		if($output['preg']){
+			foreach($data['footernavs'] as $id => $nav) {
+				$data['footernavs'][$id]['code'] = rewritereplace($nav['code']);
+			}
+			foreach($data['spacenavs'] as $id => $nav) {
+				$data['spacenavs'][$id]['code'] = rewritereplace($nav['code']);
+			}
+			foreach($data['mynavs'] as $id => $nav) {
+				$data['mynavs'][$id]['code'] = rewritereplace($nav['code']);
+			}
+			foreach($data['topnavs'] as $id => $nav) {
+				$data['topnavs'][$id]['code'] = rewritereplace($nav['code']);
+			}
+			foreach($data['plugins']['jsmenu'] as $key => $nav) {
+				$data['plugins']['jsmenu'][$key]['url'] = rewritereplace($nav['url']);
+			}
 		}
 	}
 	$data['output'] = $output;

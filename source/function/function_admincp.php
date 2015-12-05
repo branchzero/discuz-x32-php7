@@ -1368,7 +1368,52 @@ function rewritereplace($content){
 function rewritedata($alldata = 1) {
 	global $_G;
 	$data = array();
-	if($alldata) {
+	if(!$alldata) {
+		if(in_array('portal_topic', $_G['setting']['rewritestatus'])) {
+			$data['search']['portal_topic'] = "/".$_G['domain']['pregxprw']['portal']."\?mod\=topic&(amp;)?topic\=([^#]+?)?\"([^\>]*)\>/e";
+			$data['replace']['portal_topic'] = "rewriteoutput('portal_topic', 0, '\\1', '\\3', '\\4')";
+		}
+
+		if(in_array('portal_article', $_G['setting']['rewritestatus'])) {
+			$data['search']['portal_article'] = "/".$_G['domain']['pregxprw']['portal']."\?mod\=view&(amp;)?aid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+			$data['replace']['portal_article'] = "rewriteoutput('portal_article', 0, '\\1', '\\3', '\\5', '\\6')";
+		}
+
+		if(in_array('forum_forumdisplay', $_G['setting']['rewritestatus'])) {
+			$data['search']['forum_forumdisplay'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=forumdisplay&(amp;)?fid\=(\w+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+			$data['replace']['forum_forumdisplay'] = "rewriteoutput('forum_forumdisplay', 0, '\\1', '\\3', '\\5', '\\6')";
+		}
+
+		if(in_array('forum_viewthread', $_G['setting']['rewritestatus'])) {
+			$data['search']['forum_viewthread'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=viewthread&(amp;)?tid\=(\d+)(&amp;extra\=(page\%3D(\d+))?)?(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+			$data['replace']['forum_viewthread'] = "rewriteoutput('forum_viewthread', 0, '\\1', '\\3', '\\8', '\\6', '\\9')";
+		}
+
+		if(in_array('group_group', $_G['setting']['rewritestatus'])) {
+			$data['search']['group_group'] = "/".$_G['domain']['pregxprw']['forum']."\?mod\=group&(amp;)?fid\=(\d+)(&amp;page\=(\d+))?\"([^\>]*)\>/e";
+			$data['replace']['group_group'] = "rewriteoutput('group_group', 0, '\\1', '\\3', '\\5', '\\6')";
+		}
+
+		if(in_array('home_space', $_G['setting']['rewritestatus'])) {
+			$data['search']['home_space'] = "/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?(uid\=(\d+)|username\=([^&]+?))\"([^\>]*)\>/e";
+			$data['replace']['home_space'] = "rewriteoutput('home_space', 0, '\\1', '\\4', '\\5', '\\6')";
+		}
+
+		if(in_array('home_blog', $_G['setting']['rewritestatus'])) {
+			$data['search']['home_blog'] = "/".$_G['domain']['pregxprw']['home']."\?mod=space&(amp;)?uid\=(\d+)&(amp;)?do=blog&(amp;)?id=(\d+)\"([^\>]*)\>/e";
+			$data['replace']['home_blog'] = "rewriteoutput('home_blog', 0, '\\1', '\\3', '\\6', '\\7')";
+		}
+
+		if(in_array('forum_archiver', $_G['setting']['rewritestatus'])) {
+			$data['search']['forum_archiver'] = "/<a href\=\"\?(fid|tid)\-(\d+)\.html(&page\=(\d+))?\"([^\>]*)\>/e";
+			$data['replace']['forum_archiver'] = "rewriteoutput('forum_archiver', 0, '\\1', '\\2', '\\4', '\\5')";
+		}
+
+		if(in_array('plugin', $_G['setting']['rewritestatus'])) {
+			$data['search']['plugin'] = "/<a href\=\"plugin\.php\?id=([a-z]+[a-z0-9_]*):([a-z0-9_\-]+)(&amp;|&)?(.*?)?\"([^\>]*)\>/e";
+			$data['replace']['plugin'] = "rewriteoutput('plugin', 0, '\\1', '\\2', '\\3', '\\4', '\\5')";
+		}
+	} else {
 		$data['rulesearch']['portal_topic'] = 'topic-{name}.html';
 		$data['rulereplace']['portal_topic'] = 'portal.php?mod=topic&topic={name}';
 		$data['rulevars']['portal_topic']['{name}'] = '(.+)';
