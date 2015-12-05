@@ -115,18 +115,13 @@ function html2bbcode($text) {
 		"/<script.*>.*<\/script>/siU",
 		'/on(mousewheel|mouseover|click|load|onload|submit|focus|blur)="[^"]*"/i',
 		"/(\r\n|\n|\r)/",
-		"/<table([^>]*(width|background|background-color|bgcolor)[^>]*)>/siUe",
 		"/<table.*>/siU",
 		"/<tr.*>/siU",
 		"/<td>/i",
-		"/<td(.+)>/siUe",
 		"/<\/td>/i",
 		"/<\/tr>/i",
 		"/<\/table>/i",
-		'/<h([0-9]+)[^>]*>/siUe',
 		'/<\/h([0-9]+)>/siU',
-		"/<img[^>]+smilieid=\"(\d+)\".*>/esiU",
-		"/<img([^>]*src[^>]*)>/eiU",
 		"/<a\s+?name=.+?\".\">(.+?)<\/a>/is",
 		"/<br.*>/siU",
 		"/<span\s+?style=\"float:\s+(left|right);\">(.+?)<\/span>/is",
@@ -135,23 +130,23 @@ function html2bbcode($text) {
 		'',
 		'',
 		'',
-		"tabletag('\\1')",
 		'[table]',
 		'[tr]',
 		'[td]',
-		"tdtag('\\1')",
 		'[/td]',
 		'[/tr]',
 		'[/table]',
-		"\"[size=\".(7 - \\1).\"]\"",
 		"[/size]\n\n",
-		"smileycode('\\1')",
-		"imgtag('\\1')",
 		'\1',
 		"\n",
 		"[float=\\1]\\2[/float]",
 	);
 	$text = preg_replace($pregfind, $pregreplace, $text);
+	$text = preg_replace_callback("/<table([^>]*(width|background|background-color|bgcolor)[^>]*)>/siU", function($matches) { return tabletag($matches[1]); }, $text);
+	$text = preg_replace_callback("/<td(.+)>/siU", function($matches) { return tdtag($matches[1]); }, $text);
+	$text = preg_replace_callback('/<h([0-9]+)[^>]*>/siU', function($matches) { return '[size='.(7 - $matches[1]).']'; }, $text);
+	$text = preg_replace_callback("/<img[^>]+smilieid=\"(\d+)\".*>/siU", function($matches) { return smileycode($matches[1]); }, $text);
+	$text = preg_replace_callback("/<img([^>]*src[^>]*)>/iU", function($matches) { return imgtag($matches[1]); }, $text);
 
 	$text = recursion('b', $text, 'simpletag', 'b');
 	$text = recursion('strong', $text, 'simpletag', 'b');
@@ -236,11 +231,7 @@ function parsestyle($tagoptions, &$prependtags, &$appendtags) {
 	);
 
 	$style = getoptionvalue('style', $tagoptions);
-	$style = preg_replace(
-		"/(?<![a-z0-9-])color:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)(;?)/ie",
-		'sprintf("color: #%02X%02X%02X$4", $1, $2, $3)',
-		$style
-	);
+	$style = preg_replace_callback("/(?<![a-z0-9-])color:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)(;?)/i", function($matches) { return sprintf("color: #%02X%02X%02X".$matches[4], $matches[1], $matches[2], $matches[3]); }, $style);
 	foreach($searchlist as $searchtag) {
 		if(preg_match('/'.$searchtag['regex'].'/i', $style, $match)) {
 			$opnvalue = $match["$searchtag[match]"];

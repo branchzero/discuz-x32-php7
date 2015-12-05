@@ -575,7 +575,7 @@ function checkhook($currentdir, $ext = '', $sub = 1, $skip = '') {
 			} else {
 				$data = file_get_contents($file);
 				$hooks = array();
-				preg_replace("/\{hook\/(\w+?)(\s+(.+?))?\}/ie", "findhook('\\1', '\\3')", $data);
+				preg_replace_callback("/\{hook\/(\w+?)(\s+(.+?))?\}/i", function($matches) { return findhook($matches[1], $matches[3]); }, $data);
 				if($hooks) {
 					foreach($hooks as $v) {
 						$hookdata[$file][$v][] = $v;

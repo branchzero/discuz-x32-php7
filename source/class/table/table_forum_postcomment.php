@@ -160,7 +160,7 @@ class table_forum_postcomment extends discuz_table
 			}
 			if($comment['authorid'] == '-1') {
 				$cic = 0;
-				$totalcomment[$comment['pid']] = preg_replace('/<i>([\.\d]+)<\/i>/e', "'<i class=\"cmstarv\" style=\"background-position:20px -'.(intval(\\1) * 16).'px\">'.sprintf('%1.1f', \\1).'</i>'.(\$cic++ % 2 ? '<br />' : '');", $comment['comment']);
+				$totalcomment[$comment['pid']] = preg_replace_callback('/<i>([\.\d]+)<\/i>/', function($matches) use($cic) { return '<i class="cmstarv" style="background-position:20px -'.(intval($matches[1]) * 16).'px">'.sprintf('%1.1f', $matches[1]).'</i>'.($cic++ % 2 ? '<br />' : ''); }, $comment['comment']);
 			}
 			$postcache[$comment['pid']]['comment']['count'] = $commentcount[$comment['pid']];
 			$postcache[$comment['pid']]['comment']['data'] = $comments[$comment['pid']];

@@ -202,7 +202,7 @@ class Cloud_Service_Connect {
 			$attachIds[] = $aid;
 			$attachImages[] = $imageItem;
 		}
-		$content = preg_replace('/\[attach\](\d+)\[\/attach\]/ie', '$this->connectParseAttachTag(\\1, $attachNames)', $content);
+		$content = preg_replace_callback('/\[attach\](\d+)\[\/attach\]/i', function($matches) use($attachNames) { return $this->connectParseAttachTag($matches[1], $attachNames); }, $content);
 
 		return $content;
 	}

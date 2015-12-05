@@ -29,7 +29,7 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
 	$message = messagesafeclear($message);
 
 	if((strpos($message, '[/code]') || strpos($message, '[/CODE]')) !== FALSE) {
-		$message = preg_replace("/\s?\[code\](.+?)\[\/code\]\s?/ies", "", $message);
+		$message = preg_replace_callback("/\s?\[code\](.+?)\[\/code\]\s?/is", function($matches) { return ''; }, $message);
 	}
 
 	$msglower = strtolower($message);
@@ -47,11 +47,11 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
 	$message = fparsesmiles($message);
 
 	if(strpos($msglower, 'attach://') !== FALSE) {
-		$message = preg_replace("/attach:\/\/(\d+)\.?(\w*)/ie", '', $message);
+		$message = preg_replace_callback("/attach:\/\/(\d+)\.?(\w*)/i", function($matches) { return ''; }, $message);
 	}
 
 	if(strpos($msglower, 'ed2k://') !== FALSE) {
-		$message = preg_replace("/ed2k:\/\/(.+?)\//e", '', $message);
+		$message = preg_replace_callback("/ed2k:\/\/(.+?)\//", function($matches) { return ''; }, $message);
 	}
 	if(strpos($msglower, '[/i]') !== FALSE) {
 		$message = preg_replace("/\s*\[i=s\][\n\r]*(.+?)[\n\r]*\[\/i\]\s*/is", '', $message);
@@ -91,40 +91,40 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
 		$message = preg_replace($_G['cache']['bbcodes'][-$allowbbcode]['searcharray'], '', $message);
 	}
 	if(strpos($msglower, '[/hide]') !== FALSE) {
-		preg_replace("/\[hide.*?\]\s*(.*?)\s*\[\/hide\]/ies", "hideattach('\\1')", $message);
+		preg_replace_callback("/\[hide.*?\]\s*(.*?)\s*\[\/hide\]/is", function($matches) { return hideattach($matches[1]); }, $message);
 		if(strpos($msglower, '[hide]') !== FALSE) {
 			$message = preg_replace("/\[hide\]\s*(.*?)\s*\[\/hide\]/is", '', $message);
 		}
 		if(strpos($msglower, '[hide=') !== FALSE) {
-			$message = preg_replace("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/ies", '', $message);
+			$message = preg_replace_callback("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/is", function($matches) { return ''; }, $message);
 		}
 	}
 
 	if(strpos($msglower, '[/url]') !== FALSE) {
-		$message = preg_replace("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/ies", "fparseurl('\\1', '\\5', '\\2')", $message);
+		$message = preg_replace_callback("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/is", function($matches) { return fparseurl($matches[1], $matches[5], $matches[2]); }, $message);
 	}
 	if(strpos($msglower, '[/email]') !== FALSE) {
-		$message = preg_replace("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/ies", "fparseemail('\\1', '\\4')", $message);
+		$message = preg_replace_callback("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/is", function($matches) { return fparseemail($matches[1], $matches[4]); }, $message);
 	}
 
 	$nest = 0;
 	while(strpos($msglower, '[table') !== FALSE && strpos($msglower, '[/table]') !== FALSE){
-		$message = preg_replace("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/ies", "fparsetable('\\1', '\\2', '\\3')", $message);
+		$message = preg_replace_callback("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/is", function($matches) { return fparsetable($matches[1], $matches[2], $matches[3]); }, $message);
 		if(++$nest > 4) break;
 	}
 
 	if(strpos($msglower, '[/media]') !== FALSE) {
-		$message = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", "fparsemedia('\\1', '\\2')", $message);
+		$message = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) { return fparsemedia($matches[1], $matches[2]); }, $message);
 	}
 	if(strpos($msglower, '[/audio]') !== FALSE) {
-		$message = preg_replace("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/ies", "fparseaudio('\\2')", $message);
+		$message = preg_replace_callback("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/is", function($matches) { return fparseaudio($matches[2]); }, $message);
 	}
 	if(strpos($msglower, '[/flash]') !== FALSE) {
-		$message = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", "fparseflash('\\4');", $message);
+		$message = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) { return fparseflash($matches[4]); }, $message);
 	}
 
 	if($parsetype != 1 && strpos($msglower, '[swf]') !== FALSE) {
-		$message = preg_replace("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/ies", "bbcodeurl('\\1', ' <img src=\"'.STATICURL.'image/filetype/flash.gif\" align=\"absmiddle\" alt=\"\" /> <a href=\"{url}\" target=\"_blank\">Flash: {url}</a> ')", $message);
+		$message = preg_replace_callback("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/is", function($matches) { return bbcodeurl($matches[1], ' <img src="'.STATICURL.'image/filetype/flash.gif" align="absmiddle" alt="" /> <a href="{url}" target="_blank">Flash: {url}</a> '); }, $message);
 	}
 	$flag = $length ? 1 : 0;
 	if($tid) {
@@ -132,13 +132,8 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
 	}
 
 	if(strpos($msglower, '[/img]') !== FALSE) {
-		$message = preg_replace(array(
-			"/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies",
-			"/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies"
-		), $allowimg ? array(
-			"fparseimg('\\1', '$extra')",
-			"fparseimg('\\3', '$extra')"
-		) : '', $message);
+		$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimg, $extra) { return $allowimg ? fparseimg($matches[1], $extra) : ''; }, $message);
+		$message = preg_replace_callback("/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimg, $extra) { return $allowimg ? fparseimg($matches[3], $extra) : ''; }, $message);
 	}
 
 	if($tid && $pid) {
@@ -153,7 +148,7 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
 	}
 
 	if(strpos($msglower, '[/attach]') !== FALSE) {
-		$message = preg_replace("/\[attach\]\s*([^\[\<\r\n]+?)\s*\[\/attach\]/ies", '', $message);
+		$message = preg_replace_callback("/\[attach\]\s*([^\[\<\r\n]+?)\s*\[\/attach\]/is", function($matches) { return ''; }, $message);
 	}
 	$message = clearnl($message);
 
@@ -198,7 +193,8 @@ function followcode($message, $tid = 0, $pid = 0, $length = 0, $allowimg = true)
 			$specialextra = substr($message, $sppos + 3);
 			$message = substr($message, 0, $sppos);
 		}
-		$message = preg_replace(array("/(^|>)([^<]+)(?=<|$)/sUe", "/<highlight>(.*)<\/highlight>/siU"), array("highlightword('\\2', \$highlightarray, '\\1')", "<strong><font color=\"#FF0000\">\\1</font></strong>"), $message);
+		$message = preg_replace("/<highlight>(.*)<\/highlight>/siU", "<strong><font color=\"#FF0000\">\\1</font></strong>", $message);
+		$message = preg_replace_callback("/(^|>)([^<]+)(?=<|$)/sU", function($matches) use($highlightarray) { return highlightword($matches[2], $highlightarray, $matches[1]); }, $message);
 		if($sppos !== FALSE) {
 			$message = $message.chr(0).chr(0).chr(0).$specialextra;
 		}
@@ -361,22 +357,14 @@ function fparsetable($width, $bgcolor, $message) {
 			$width = intval($width);
 			$width = $width ? ($width <= 560 ? $width.'px' : '98%') : '';
 		}
+		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return parsetrtd($matches[1], 0, 0, $matches[2]); }, $message);
+		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return parsetrtd('td', 0, 0, $matches[1]); }, $message);
+		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return parsetrtd($matches[1], $matches[2], $matches[3], $matches[4]); }, $message);
+		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return parsetrtd('td', $matches[1], $matches[2], $matches[3]); }, $message);
 		$html = '<table cellspacing="0" class="t_table" '.
 			($width == '' ? NULL : 'style="width:'.$width.'"').
 			($bgcolor ? ' bgcolor="'.$bgcolor.'">' : '>').
-			str_replace('\\"', '"', preg_replace(array(
-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
-					"/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
-					"/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
-					"/\[\/td\]\s*\[\/tr\]\s*/i"
-				), array(
-					"parsetrtd('\\1', '0', '0', '\\2')",
-					"parsetrtd('td', '0', '0', '\\1')",
-					"parsetrtd('\\1', '\\2', '\\3', '\\4')",
-					"parsetrtd('td', '\\1', '\\2', '\\3')",
-					'</td></tr>'
-				), $message)
+			str_replace('\\"', '"', preg_replace("/\[\/td\]\s*\[\/tr\]\s*/i", '</td></tr>', $message)
 			).'</table>';
 	}
 	return fcodedisp($html);

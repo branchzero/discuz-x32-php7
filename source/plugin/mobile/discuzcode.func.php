@@ -23,18 +23,18 @@ function mobile_discuzcode($param) {
 
 	if($pid && strpos($message, '[/password]') !== FALSE) {
 		if($authorid != $_G['uid'] && !$_G['forum']['ismoderator']) {
-			$message = preg_replace("/\s?\[password\](.+?)\[\/password\]\s?/ie", "parsepassword('\\1', \$pid)", $message);
+			$message = preg_replace_callback("/\s?\[password\](.+?)\[\/password\]\s?/i", function($matches) use($pid) { return parsepassword($matches[1], $pid); }, $message);
 			if($_G['forum_discuzcode']['passwordlock'][$pid]) {
 				return '';
 			}
 		} else {
-			$message = preg_replace("/\s?\[password\](.+?)\[\/password\]\s?/ie", "", $message);
+			$message = preg_replace_callback("/\s?\[password\](.+?)\[\/password\]\s?/i", function($matches) { return ''; }, $message);
 			$_G['forum_discuzcode']['passwordauthor'][$pid] = 1;
 		}
 	}
 
 	if($parsetype != 1 && !$bbcodeoff && $allowbbcode && (strpos($message, '[/code]') || strpos($message, '[/CODE]')) !== FALSE) {
-		$message = preg_replace("/\s?\[code\](.+?)\[\/code\]\s?/ies", "mobile_parsecode('\\1')", $message);
+		$message = preg_replace_callback("/\s?\[code\](.+?)\[\/code\]\s?/is", function($matches) { return mobile_parsecode($matches[1]); }, $message);
 	}
 
 	$msglower = strtolower($message);
@@ -52,26 +52,26 @@ function mobile_discuzcode($param) {
 	}
 
 	if($_G['setting']['allowattachurl'] && strpos($msglower, 'attach://') !== FALSE) {
-		$message = preg_replace("/attach:\/\/(\d+)\.?(\w*)/ie", "parseattachurl('\\1', '\\2', 1)", $message);
+		$message = preg_replace_callback("/attach:\/\/(\d+)\.?(\w*)/i", function($matches) { return parseattachurl($matches[1], $matches[2], 1); }, $message);
 	}
 
 	if($allowbbcode) {
 		if(strpos($msglower, 'ed2k://') !== FALSE) {
-			$message = preg_replace("/ed2k:\/\/(.+?)\//e", "mobile_parseed2k('\\1')", $message);
+			$message = preg_replace_callback("/ed2k:\/\/(.+?)\//", function($matches) { return mobile_parseed2k($matches[1]); }, $message);
 		}
 	}
 
 	if(!$bbcodeoff && $allowbbcode) {
 		if(strpos($msglower, '[/url]') !== FALSE) {
-			$message = preg_replace("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/ies", "mobile_parseurl('\\1', '\\5', '\\2')", $message);
+			$message = preg_replace_callback("/\[url(=((https?|ftp|gopher|news|telnet|rtsp|mms|callto|bctp|thunder|qqdl|synacast){1}:\/\/|www\.|mailto:)?([^\r\n\[\"']+?))?\](.+?)\[\/url\]/is", function($matches) { return mobile_parseurl($matches[1], $matches[5], $matches[2]); }, $message);
 		}
 		if(strpos($msglower, '[/email]') !== FALSE) {
-			$message = preg_replace("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/ies", "strip_tags(parseemail('\\1', '\\4'))", $message);
+			$message = preg_replace_callback("/\[email(=([a-z0-9\-_.+]+)@([a-z0-9\-_]+[.][a-z0-9\-_.]+))?\](.+?)\[\/email\]/is", function($matches) { return strip_tags(parseemail($matches[1], $matches[4])); }, $message);
 		}
 
 		$nest = 0;
 		while(strpos($msglower, '[table') !== FALSE && strpos($msglower, '[/table]') !== FALSE){
-			$message = preg_replace("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/ies", "mobile_parsetable('\\1', '\\2', '\\3')", $message);
+			$message = preg_replace_callback("/\[table(?:=(\d{1,4}%?)(?:,([\(\)%,#\w ]+))?)?\]\s*(.+?)\s*\[\/table\]/is", function($matches) { return mobile_parsetable($matches[1], $matches[2], $matches[3]); }, $message);
 			if(++$nest > 4) break;
 		}
 
@@ -120,13 +120,13 @@ function mobile_discuzcode($param) {
 			}
 		}
 		if(strpos($msglower, '[/media]') !== FALSE) {
-			$message = preg_replace("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/ies", "bbcodeurl('\\2', '<a class=\"media\" href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
+			$message = preg_replace_callback("/\[media=([\w,]+)\]\s*([^\[\<\r\n]+?)\s*\[\/media\]/is", function($matches) { return bbcodeurl($matches[2], '<a class="media" href="{url}" target="_blank">{url}</a>'); }, $message);
 		}
 		if(strpos($msglower, '[/audio]') !== FALSE) {
-			$message = preg_replace("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/ies", "bbcodeurl('\\2', '<a href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
+			$message = preg_replace_callback("/\[audio(=1)*\]\s*([^\[\<\r\n]+?)\s*\[\/audio\]/is", function($matches) { return bbcodeurl($matches[2], '<a href="{url}" target="_blank">{url}</a>'); }, $message);
 		}
 		if(strpos($msglower, '[/flash]') !== FALSE) {
-			$message = preg_replace("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/ies", "bbcodeurl('\\4', '<a href=\"{url}\" target=\"_blank\">{url}</a>')", $message);
+			$message = preg_replace_callback("/\[flash(=(\d+),(\d+))?\]\s*([^\[\<\r\n]+?)\s*\[\/flash\]/is", function($matches) { return bbcodeurl($matches[4], '<a href="{url}" target="_blank">{url}</a>'); }, $message);
 		}
 
 		if($parsetype != 1 && $allowbbcode < 0 && isset($_G['cache']['bbcodes'][-$allowbbcode])) {
@@ -138,7 +138,7 @@ function mobile_discuzcode($param) {
 				$msglower = strtolower($message);
 			}
 			if(strpos($msglower, '[hide=d') !== FALSE) {
-				$message = preg_replace("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/ies", "expirehide('\\1','\\2','\\3', $pdateline)", $message);
+				$message = preg_replace_callback("/\[hide=(d\d+)?[,]?(\d+)?\]\s*(.*?)\s*\[\/hide\]/is", function($matches) use($pdateline) { return expirehide($matches[1], $matches[2], $matches[3], $pdateline); }, $message);
 				$msglower = strtolower($message);
 			}
 			if(strpos($msglower, '[hide]') !== FALSE) {
@@ -158,7 +158,7 @@ function mobile_discuzcode($param) {
 				}
 			}
 			if(strpos($msglower, '[hide=') !== FALSE) {
-				$message = preg_replace("/\[hide=(\d+)\]\s*(.*?)\s*\[\/hide\]/ies", "creditshide(\\1,'\\2', $pid, $authorid)", $message);
+				$message = preg_replace_callback("/\[hide=(\d+)\]\s*(.*?)\s*\[\/hide\]/is", function($matches) use($pid, $authorid) { return creditshide($matches[1], $matches[2], $pid, $authorid); }, $message);
 			}
 		}
 	}
@@ -171,21 +171,13 @@ function mobile_discuzcode($param) {
 
 	if(!$bbcodeoff) {
 		if($parsetype != 1 && strpos($msglower, '[swf]') !== FALSE) {
-			$message = preg_replace("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/ies", "bbcodeurl('\\1', ' <img src=\"'.STATICURL.'image/filetype/flash.gif\" align=\"absmiddle\" alt=\"\" /> <a href=\"{url}\" target=\"_blank\">Flash: {url}</a> ')", $message);
+			$message = preg_replace_callback("/\[swf\]\s*([^\[\<\r\n]+?)\s*\[\/swf\]/is", function($matches) { return bbcodeurl($matches[1], ' <img src="'.STATICURL.'image/filetype/flash.gif" align="absmiddle" alt="" /> <a href="{url}" target="_blank">Flash: {url}</a> '); }, $message);
 		}
 
 		$attrsrc = !IS_ROBOT && $lazyload ? 'file' : 'src';
 		if(strpos($msglower, '[/img]') !== FALSE) {
-			$message = preg_replace(array(
-				"/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies",
-				"/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies"
-			), $allowimgcode ? array(
-				"mobile_parseimg(0, 0, '\\1', ".intval($lazyload).", ".intval($pid).", 'onmouseover=\"img_onmouseoverfunc(this)\" ".($lazyload ? "lazyloadthumb=\"1\"" : "onload=\"thumbImg(this)\"")."')",
-				"mobile_parseimg('\\1', '\\2', '\\3', ".intval($lazyload).", ".intval($pid).")"
-			) : ($allowbbcode ? array(
-				(!defined('IN_MOBILE') ? "bbcodeurl('\\1', '<a href=\"{url}\" target=\"_blank\">{url}</a>')" : "bbcodeurl('\\1', '')"),
-				(!defined('IN_MOBILE') ? "bbcodeurl('\\3', '<a href=\"{url}\" target=\"_blank\">{url}</a>')" : "bbcodeurl('\\3', '')"),
-			) : array("bbcodeurl('\\1', '{url}')", "bbcodeurl('\\3', '{url}')")), $message);
+			$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimgcode, $lazyload, $pid, $allowbbcode) { return $allowimgcode ? mobile_parseimg(0, 0, $matches[1], intval($lazyload), intval($pid), 'onmouseover="img_onmouseoverfunc(this)" '.($lazyload ? 'lazyloadthumb="1"' : 'onload="thumbImg(this)"')) : ($allowbbcode ? (!defined('IN_MOBILE') ? bbcodeurl($matches[1], '<a href="{url}" target="_blank">{url}</a>') : bbcodeurl($matches[1], '')) : bbcodeurl($matches[1], '{url}')); }, $message);
+			$message = preg_replace_callback("/\[img=(\d{1,4})[x|\,](\d{1,4})\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is", function($matches) use($allowimgcode, $lazyload, $pid, $allowbbcode) { return $allowimgcode ? mobile_parseimg($matches[1], $matches[2], $matches[3], intval($lazyload), intval($pid)) : ($allowbbcode ? (!defined('IN_MOBILE') ? bbcodeurl('\\3', '<a href=\"{url}\" target=\"_blank\">{url}</a>') : bbcodeurl($matches[3], '')) : bbcodeurl($matches[3], '{url}')); }, $message);
 		}
 	}
 
@@ -271,21 +263,13 @@ function mobile_parsetable($width, $bgcolor, $message) {
 		if(!preg_match("/^\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td([=\d,%]+)?\]/", $message) && !preg_match("/^<tr[^>]*?>\s*<td[^>]*?>/", $message)) {
 			return str_replace('\\"', '"', preg_replace("/\[tr(?:=([\(\)\s%,#\w]+))?\]|\[td([=\d,%]+)?\]|\[\/td\]|\[\/tr\]/", '', $message));
 		}
+		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return mobile_parsetrtd($matches[1], 0, 0, $matches[2]); }, $message);
+		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/i", function($matches) { return mobile_parsetrtd('td', 0, 0, $matches[1]); }, $message);
+		$message = preg_replace_callback("/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return mobile_parsetrtd($matches[1], $matches[2], $matches[3], $matches[4]); }, $message);
+		$message = preg_replace_callback("/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/i", function($matches) { return mobile_parsetrtd('td', $matches[1], $matches[2], $matches[3]); }, $message);
 		return '<table class="dzcode_table" cellspacing="0" '.
 			($bgcolor ? ' bgcolor="'.$bgcolor.'">' : '>').
-			str_replace('\\"', '"', preg_replace(array(
-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
-					"/\[\/td\]\s*\[td(?:=(\d{1,4}%?))?\]/ie",
-					"/\[tr(?:=([\(\)\s%,#\w]+))?\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
-					"/\[\/td\]\s*\[td(?:=(\d{1,2}),(\d{1,2})(?:,(\d{1,4}%?))?)?\]/ie",
-					"/\[\/td\]\s*\[\/tr\]\s*/i"
-				), array(
-					"mobile_parsetrtd('\\1', '0', '0', '\\2')",
-					"mobile_parsetrtd('td', '0', '0', '\\1')",
-					"mobile_parsetrtd('\\1', '\\2', '\\3', '\\4')",
-					"mobile_parsetrtd('td', '\\1', '\\2', '\\3')",
-					'</td></tr>'
-				), $message)
+			str_replace('\\"', '"', preg_replace("/\[\/td\]\s*\[\/tr\]\s*/i", '</td></tr>', $message)
 			).'</table>';
 	}
 }

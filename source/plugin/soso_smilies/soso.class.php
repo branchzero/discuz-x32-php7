@@ -78,7 +78,7 @@ class plugin_soso_smilies extends plugin_soso_smilies_base {
 			$allowsmilies = $param['param'][4];
 			$pid = $param['param'][12];
 			if(!$smileyoff && $allowsmilies && strpos($_G['discuzcodemessage'], '{:soso_') !== false) {
-				$_G['discuzcodemessage'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", "'.$_G['setting']['maxsmilies'].'", "'.$pid.'")', $_G['discuzcodemessage'], $_G['setting']['maxsmilies']);
+				$_G['discuzcodemessage'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) use($pid, $_G) { return $this->_soso_smiles($matches[1], $_G['setting']['maxsmilies'], $pid); }, $_G['discuzcodemessage'], $_G['setting']['maxsmilies']);
 			}
 		} else {
 			$_G['discuzcodemessage'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", '', $_G['discuzcodemessage']);
@@ -137,7 +137,7 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
 	function spacecp_profile_sightml() {
 		global $_G;
 		if($_GET['ac'] == 'profile' && submitcheck('profilesubmitbtn') && !empty($_POST['sightml'])) {
-			$_POST['sightml'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 1)', $_POST['sightml'], $_G['setting']['maxsmilies']);
+			$_POST['sightml'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 1); }, $_POST['sightml'], $_G['setting']['maxsmilies']);
 		}
 	}
 
@@ -146,12 +146,12 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
 		if(!empty($GLOBALS['msglist'])) {
 			foreach($GLOBALS['msglist'] as $day => $result) {
 				foreach($result as $key => $value) {
-					$GLOBALS['msglist'][$day][$key]['message'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['msglist'][$day][$key]['message'], $_G['setting']['maxsmilies']);
+					$GLOBALS['msglist'][$day][$key]['message'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['msglist'][$day][$key]['message'], $_G['setting']['maxsmilies']);
 				}
 			}
 		} elseif($_GET['op'] == 'showchatmsg' && $GLOBALS['list']) {
 			foreach($GLOBALS['list'] as $key => $value) {
-				$GLOBALS['list'][$key]['message'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['list'][$key]['message'], $_G['setting']['maxsmilies']);
+				$GLOBALS['list'][$key]['message'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['list'][$key]['message'], $_G['setting']['maxsmilies']);
 			}
 		}
 	}
@@ -161,7 +161,7 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
 		if(!empty($GLOBALS['list'])) {
 			foreach($GLOBALS['list'] as $key => $value) {
 				if(!empty($_GET['subop'])) {
-					$GLOBALS['list'][$key] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['list'][$key], $_G['setting']['maxsmilies']);
+					$GLOBALS['list'][$key] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['list'][$key], $_G['setting']['maxsmilies']);
 				} else {
 					$GLOBALS['list'][$key] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", '', $GLOBALS['list'][$key], $_G['setting']['maxsmilies']);
 				}
@@ -173,7 +173,7 @@ class plugin_soso_smilies_home extends plugin_soso_smilies {
 		global $_G;
 		if(!empty($GLOBALS['list']['content'])) {
 			foreach($GLOBALS['list']['content'] as $key => $value) {
-				$GLOBALS['list']['content'][$key]['content'] = preg_replace("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/e", '$this->_soso_smiles("\\1", -1, 0, 0)', $GLOBALS['list']['content'][$key]['content'], $_G['setting']['maxsmilies']);
+				$GLOBALS['list']['content'][$key]['content'] = preg_replace_callback("/\{\:soso_((e\d+)|(_\d+_\d))\:\}/", function($matches) { return $this->_soso_smiles($matches[1], -1, 0, 0); }, $GLOBALS['list']['content'][$key]['content'], $_G['setting']['maxsmilies']);
 			}
 		}
 	}

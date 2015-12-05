@@ -19,7 +19,7 @@ class helper_mobile {
 		if(!defined('TPL_DEFAULT')) {
 			$content = ob_get_contents();
 			ob_end_clean();
-			$content = preg_replace("/href=\"(\w+\.php)(.*?)\"/e", "mobilereplace('\\1', '\\2')", $content);
+			$content = preg_replace_callback("/href=\"(\w+\.php)(.*?)\"/", function($matches) { return mobilereplace($matches[1], $matches[2]); }, $content);
 
 			ob_start();
 			$content = '<?xml version="1.0" encoding="utf-8"?>'.$content;

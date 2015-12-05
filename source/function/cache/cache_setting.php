@@ -271,8 +271,8 @@ function build_cache_setting() {
 			} else {
 				$data['watermarktext']['fontpath'][$k] = 'static/image/seccode/font/'.$data['watermarktext']['fontpath'][$k];
 			}
-			$data['watermarktext']['color'][$k] = preg_replace('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/e', "hexdec('\\1').','.hexdec('\\2').','.hexdec('\\3')", $data['watermarktext']['color'][$k]);
-			$data['watermarktext']['shadowcolor'][$k] = preg_replace('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/e', "hexdec('\\1').','.hexdec('\\2').','.hexdec('\\3')", $data['watermarktext']['shadowcolor'][$k]);
+			$data['watermarktext']['color'][$k] = preg_replace_callback('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/', function($matches) { return hexdec($matches[1]).','.hexdec($matches[2]).','.hexdec($matches[3]); }, $data['watermarktext']['color'][$k]);
+			$data['watermarktext']['shadowcolor'][$k] = preg_replace_callback('/#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/', function($matches) { return hexdec($matches[1]).','.hexdec($matches[2]).','.hexdec($matches[3]); }, $data['watermarktext']['shadowcolor'][$k]);
 		} else {
 			$data['watermarktext']['text'][$k] = '';
 			$data['watermarktext']['fontpath'][$k] = '';
@@ -993,7 +993,7 @@ function get_cachedata_threadprofile() {
 	}
 	foreach($data['template'] as $id => $template) {
 		foreach($template as $type => $row) {
-			$data['template'][$id][$type] = preg_replace('/\{([\w:]+)(=([^}]+?))?\}(([^}]+?)\{\*\}([^}]+?)\{\/\\1\})?/es', "get_cachedata_threadprofile_nodeparse(\$id, \$type, '\\1', '\\5', '\\6', '\\3')", $template[$type]);
+			$data['template'][$id][$type] = preg_replace_callback('/\{([\w:]+)(=([^}]+?))?\}(([^}]+?)\{\*\}([^}]+?)\{\/\\1\})?/s', function($matches) use($id, $type) { return get_cachedata_threadprofile_nodeparse($id, $type, $matches[1], $matches[5], $matches[6], $matches[3]); }, $template[$type]);
 		}
 	}
 	$data['code'] = $_G['cachedata_threadprofile_code'];

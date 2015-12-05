@@ -518,7 +518,6 @@ function checktplrefresh($maintpl, $subtpl, $timecompare, $templateid, $cachefil
 
 function template($file, $templateid = 0, $tpldir = '', $gettplfile = 0, $primaltpl='') {
 	global $_G;
-
 	static $_init_style = false;
 	if($_init_style === false) {
 		C::app()->_init_style();
@@ -637,6 +636,7 @@ function template($file, $templateid = 0, $tpldir = '', $gettplfile = 0, $primal
 	if($gettplfile) {
 		return $tplfile;
 	}
+
 	checktplrefresh($tplfile, $tplfile, @filemtime(DISCUZ_ROOT.$cachefile), $templateid, $cachefile, $tpldir, $file);
 	return DISCUZ_ROOT.$cachefile;
 }
@@ -1164,7 +1164,7 @@ function hookscript($script, $hscript, $type = 'funcs', $param = array(), $func 
 					if(!method_exists($pluginclasses[$classkey], $hookfunc[1])) {
 						continue;
 					}
-					$return = $pluginclasses[$classkey]->$hookfunc[1]($param);
+					$return = call_user_func(array($pluginclasses[$classkey], $hookfunc[1]), $param);
 
 					if(substr($hookkey, -7) == '_extend' && !empty($_G['setting']['pluginhooks'][$hookkey])) {
 						continue;

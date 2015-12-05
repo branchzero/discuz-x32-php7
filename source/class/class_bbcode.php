@@ -51,9 +51,8 @@ class bbcode {
 		}
 
 		if($parseurl==2) {
-			$this->search_exp[] = "/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/ies";
-			$this->replace_exp[] = '$this->bb_img(\'\\1\')';
 			$message = bbcode::parseurl($message);
+			$message = preg_replace_callback("/\[img\]\s*([^\[\<\r\n]+?)\s*\[\/img\]/is" , function($matches) { return $this->bb_img($matches[1]); }, $message);
 		}
 
 		@$message = str_replace($this->search_str, $this->replace_str,preg_replace($this->search_exp, $this->replace_exp, $message, 20));

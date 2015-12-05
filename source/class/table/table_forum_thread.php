@@ -496,7 +496,7 @@ class table_forum_thread extends discuz_table
 				}
 			}
 		}
-		if(!defined('IN_MOBILE') && $defult && $conditions['sticky'] == 4 && $start == 0 && $limit && strtolower(preg_replace("/\s?/ies", '', $order)) == 'displayorderdesc,lastpostdesc' && empty($sort)) {
+		if(!defined('IN_MOBILE') && $defult && $conditions['sticky'] == 4 && $start == 0 && $limit && strtolower(preg_replace_callback("/\s?/is", function($matches) { return ''; }, $order)) == 'displayorderdesc,lastpostdesc' && empty($sort)) {
 			foreach($conditions['displayorder'] as $id) {
 				if($id < 2) {
 					$firstpage = true;
