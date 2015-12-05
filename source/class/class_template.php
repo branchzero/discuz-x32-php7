@@ -308,13 +308,11 @@ class template {
 	}
 
 	function stripscriptamp($s, $extra) {
-		$extra = str_replace('\\"', '"', $extra);
 		$s = str_replace('&amp;', '&', $s);
 		return "<script src=\"$s\" type=\"text/javascript\"$extra></script>";
 	}
 
 	function stripblock($var, $s) {
-		$s = str_replace('\\"', '"', $s);
 		$s = preg_replace("/<\?=\\\$(.+?)\?>/", "{\$\\1}", $s);
 		preg_match_all("/<\?=(.+?)\?>/e", $s, $constary);
 		$constadd = '';
