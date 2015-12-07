@@ -74,7 +74,7 @@ class template {
 	function complie() {
 		$template = file_get_contents($this->tplfile);
 		$template = preg_replace("/\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
-		$template = preg_replace("/\{lang\s+(\w+?)\}/ise", "\$this->lang('\\1')", $template);
+		$template = preg_replace_callback("/\{lang\s+(\w+?)\}/is", function($matches) { return $this->lang($matches[1]); }, $template);
 
 		$template = preg_replace("/\{($this->var_regexp)\}/", "<?=\\1?>", $template);
 		$template = preg_replace("/\{($this->const_regexp)\}/", "<?=\\1?>", $template);

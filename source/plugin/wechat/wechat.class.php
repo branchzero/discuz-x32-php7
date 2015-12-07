@@ -285,7 +285,7 @@ class WeChat {
 		if (!method_exists($class, $hook['method'])) {
 			return;
 		}
-		$return = $class->$hook['method']($type);
+		$return = call_user_func(array($class, $hook['method']), $type);
 		if($return) {
 			return $return;
 		}

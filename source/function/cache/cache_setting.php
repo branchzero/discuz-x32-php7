@@ -448,19 +448,29 @@ function build_cache_setting() {
 		}
 		if($output['preg']){
 			foreach($data['footernavs'] as $id => $nav) {
-				$data['footernavs'][$id]['code'] = rewritereplace($nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['footernavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['spacenavs'] as $id => $nav) {
-				$data['spacenavs'][$id]['code'] = rewritereplace($nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['spacenavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['mynavs'] as $id => $nav) {
-				$data['mynavs'][$id]['code'] = rewritereplace($nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['mynavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['topnavs'] as $id => $nav) {
-				$data['topnavs'][$id]['code'] = rewritereplace($nav['code']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['topnavs'][$id]['code'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['code']);
+				}
 			}
 			foreach($data['plugins']['jsmenu'] as $key => $nav) {
-				$data['plugins']['jsmenu'][$key]['url'] = rewritereplace($nav['url']);
+				foreach ($output['preg']['search'] as $key => $value) {
+					$data['plugins']['jsmenu'][$key]['url'] = preg_replace_callback($value, create_function('$matches', 'return '.$output['preg']['replace'][$key].';'), $nav['url']);
+				}
 			}
 		}
 	}

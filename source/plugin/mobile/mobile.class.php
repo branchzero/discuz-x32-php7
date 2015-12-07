@@ -277,7 +277,7 @@ class mobile_core {
 				if(!$isavariables) {
 					$value[$module.'_'.$hookname][$plugin] = $pluginclasses[$hook['class']]->$hook['method']($param);
 				} else {
-					$pluginclasses[$hook['class']]->$hook['method']($param);
+					call_user_func(array($pluginclasses[$hook['class']], $hook['method']), $param);
 				}
 			}
 		}

@@ -1086,7 +1086,10 @@ function output_replace($content) {
 			$_G['setting']['output']['preg']['replace'] = str_replace('{CURHOST}', $_G['siteurl'], $_G['setting']['output']['preg']['replace']);
 		}
 
-		$content = preg_replace($_G['setting']['output']['preg']['search'], $_G['setting']['output']['preg']['replace'], $content);
+		foreach ($_G['setting']['output']['preg']['search'] as $key => $value) {
+			$content = preg_replace_callback($value, create_function('$matches', 'return '.$_G['setting']['output']['preg']['replace'][$key].';'), $content);
+		}
+		
 	}
 
 	return $content;
