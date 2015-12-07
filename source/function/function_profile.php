@@ -326,7 +326,7 @@ function profile_show($fieldid, $space=array(), $getalone = false) {
 	} elseif($fieldid == 'position') {
 		return nl2br($space['office'] ? $space['office'] : $space['position']);
 	} elseif($fieldid == 'qq') {
-		return '<a href="http://wpa.qq.com/msgrd?V=3&Uin='.$space[$fieldid].'&Site='.$_G['setting']['bbname'].'&Menu=yes&from=discuz" target="_blank" title="'.lang('spacecp', 'qq_dialog').'"><img src="'.STATICURL.'/image/common/qq.gif" alt="QQ" style="margin:0px;"/></a>';
+		return '<a href="http://wpa.qq.com/msgrd?v=3&uin='.$space[$fieldid].'&site='.$_G['setting']['bbname'].'&menu=yes&from=discuz" target="_blank" title="'.lang('spacecp', 'qq_dialog').'"><img src="'.STATICURL.'/image/common/qq.gif" alt="QQ" style="margin:0px;"/></a>';
 	} elseif($fieldid == 'qqnumber') {
 		return $space['qq'];
 	} else {
