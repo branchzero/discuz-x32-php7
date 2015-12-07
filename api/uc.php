@@ -60,7 +60,7 @@ if(!defined('IN_UC')) {
 
 	if(in_array($get['action'], array('test', 'deleteuser', 'renameuser', 'gettag', 'synlogin', 'synlogout', 'updatepw', 'updatebadwords', 'updatehosts', 'updateapps', 'updateclient', 'updatecredit', 'getcredit', 'getcreditsettings', 'updatecreditsettings', 'addfeed'))) {
 		$uc_note = new uc_note();
-		echo $uc_note->$get['action']($get, $post);
+		echo call_user_func(array($uc_note, $get['action']), $get, $post);
 		exit();
 	} else {
 		exit(API_RETURN_FAILED);
@@ -83,7 +83,7 @@ class uc_note {
 		return xml_serialize($arr, $htmlon);
 	}
 
-	function uc_note() {
+	function __construct() {
 
 	}
 
