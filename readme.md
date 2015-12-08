@@ -1,6 +1,6 @@
 #Discuz X3.2 UTF-8 20151208 For PHP7
 
-This is a a PHP7 Port of Discuz! X3.2, based on Discuz X3.2 UTF-8 20150609.
+This is a a PHP7 Port of Discuz! X3.2, based on Discuz X3.2 UTF-8 20151208.
 *Please Do Not Use For Production*
 
 ###Changes
