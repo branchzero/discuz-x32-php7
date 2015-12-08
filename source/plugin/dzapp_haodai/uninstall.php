@@ -1,4 +1,7 @@
 <?php
+
+if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) exit('Access Denied!');
+
 include_once DISCUZ_ROOT.'./data/dzapp_haodai_config.php';
 @unlink(DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_setting.php');
 @unlink(DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_xindai_ad_'.HD_CITY.'.php');
@@ -12,5 +15,7 @@ include_once DISCUZ_ROOT.'./data/dzapp_haodai_config.php';
 @unlink(DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_hot_recommend.php');
 @unlink(DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_city.php');
 @unlink(DISCUZ_ROOT.'./data/dzapp_haodai_config.php');
+
 $finish = TRUE;
+
 ?>

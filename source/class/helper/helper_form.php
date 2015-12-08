@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: helper_form.php 34543 2014-05-26 07:33:21Z nemohou $
+ *      $Id: helper_form.php 35375 2015-07-06 02:26:18Z nemohou $
  */
 
 if(!defined('IN_DISCUZ')) {
@@ -20,8 +20,7 @@ class helper_form {
 		} else {
 			global $_G;
 			if($allowget || ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_GET['formhash']) && $_GET['formhash'] == formhash() && empty($_SERVER['HTTP_X_FLASH_VERSION']) && (empty($_SERVER['HTTP_REFERER']) ||
-				strncmp($_SERVER['HTTP_REFERER'], 'http://wsq.discuz.qq.com', 24) === 0 || strncmp($_SERVER['HTTP_REFERER'], 'http://m.wsq.qq.com', 19) === 0 ||
-				preg_replace("/https?:\/\/([^\:\/]+).*/i", "\\1", $_SERVER['HTTP_REFERER']) == preg_replace("/([^\:]+).*/", "\\1", $_SERVER['HTTP_HOST'])))) {
+				strncmp($_SERVER['HTTP_REFERER'], 'http://wsq.discuz.qq.com/', 25) === 0 || preg_replace("/https?:\/\/([^\:\/]+).*/i", "\\1", $_SERVER['HTTP_REFERER']) == preg_replace("/([^\:]+).*/", "\\1", $_SERVER['HTTP_HOST'])))) {
 				if(checkperm('seccode')) {
 					if($secqaacheck && !check_secqaa($_GET['secanswer'], $_GET['secqaahash'])) {
 						showmessage('submit_secqaa_invalid');

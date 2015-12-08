@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: admincp_cloudaddons.php 33369 2013-06-03 05:00:29Z andyzheng $
+ *      $Id: admincp_cloudaddons.php 35705 2015-12-01 06:14:33Z nemohou $
  */
 if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 	exit('Access Denied');
@@ -35,8 +35,7 @@ if(!$operation) {
 } elseif($operation == 'download') {
 	$step = intval($_GET['step']);
 	$addoni = intval($_GET['i']);
-	$uniqueid = $_G['setting']['siteuniqueid'] ? $_G['setting']['siteuniqueid'] : C::t('common_setting')->fetch('siteuniqueid');
-	if(!$_GET['md5hash'] || md5($_GET['addonids'].md5($uniqueid.$_GET['timestamp'])) != $_GET['md5hash']) {
+	if(!$_GET['md5hash'] || md5($_GET['addonids'].md5(cloudaddons_getuniqueid().$_GET['timestamp'])) != $_GET['md5hash']) {
 		cpmsg('cloudaddons_validator_error', '', 'error');
 	}
 	$addonids = explode(',', $_GET['addonids']);

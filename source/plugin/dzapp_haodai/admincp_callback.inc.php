@@ -6,12 +6,12 @@
  * @author BranchZero <branchzero@gmail.com>
  */
 
+if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) exit('Access Denied!');
+
 include_once DISCUZ_ROOT.'./data/dzapp_haodai_config.php';
 include_once DISCUZ_ROOT.'./source/plugin/dzapp_haodai/haodai.api.class.php';
 @include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_setting.php';
-if(!defined('IN_DISCUZ') || !defined('IN_DISCUZ')) {
-	exit('Access Denied');
-}
+
 $lang = array_merge($lang, $scriptlang['dzapp_haodai']);
 
 if(!$_GET['want']){
@@ -72,6 +72,7 @@ if(!$_GET['want']){
 		$config['HD_CALLBACK_URL'] = $_GET['CALLBACK_URL'];
 		$config['HD_API_HOST'] = $_GET['API_HOST'];
 		$config['HD_CITY'] = defined('HD_CITY') ? HD_CITY : '';
+		$config = daddslashes($config);
 		$configfile = "<?php \r\n";
 		foreach($config as $key => $value){
 			$configfile .= "define('$key', '$value');\r\n";

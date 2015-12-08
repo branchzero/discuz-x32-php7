@@ -6,6 +6,9 @@
  * @author BranchZero <branchzero@gmail.com>
  */
 
+if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
+	exit('Access Denied');
+}
 
 echo '<h1>'.lang('plugin/dzapp_haodai','rewrite_intro_title').'</h1>
 <pre class="colorbox">

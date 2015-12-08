@@ -7,13 +7,12 @@
  * @author BranchZero <branchzero@gmail.com>
  */
 
+!defined('IN_DISCUZ') && exit('Access Denied');
+
 include_once DISCUZ_ROOT.'./data/dzapp_haodai_config.php';
 include_once DISCUZ_ROOT.'./source/plugin/dzapp_haodai/haodai.api.class.php';
 include_once DISCUZ_ROOT.'./source/plugin/dzapp_haodai/dzapp_haodai.func.php';
 @include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_setting.php';
-if(!defined('IN_DISCUZ') || !defined('IN_DISCUZ')) {
-	exit('Access Denied');
-}
 
 if(!@include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_city.php' || TIMESTAMP - filemtime(DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_city.php') > $var['refreshtime']){
 	$client = new HaoDaiClient(HD_AKEY, HD_SKEY, $hd_token['access_token']);

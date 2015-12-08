@@ -9,6 +9,7 @@
 
 
 if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) exit('Access Denied!');
+
 $request_url = str_replace('&step='.$_GET['step'],'',$_SERVER['QUERY_STRING']);
 $form_url = str_replace('action=','',$request_url);
 showsubmenusteps($installlang['title'], array(
@@ -79,6 +80,7 @@ switch($_GET['step']){
 						$config['HD_SKEY'] = $result['hd_skey'];
 						$config['HD_CALLBACK_URL'] = $result['hd_callback_url'];
 						$config['HD_API_HOST'] = 'http://api.haodai.com/';
+						$config = daddslashes($config);
 						$configfile = "<?php \r\n";
 						foreach($config as $key => $value){
 							$configfile .= "define('$key', '$value');\r\n";
@@ -124,6 +126,7 @@ switch($_GET['step']){
 						$config['HD_CALLBACK_URL'] = $result['hd_callback_url'];
 						$config['HD_API_HOST'] = 'http://api.haodai.com/';
 						$config['HD_CITY'] = '';
+						$config = daddslashes($config);
 						$configfile = "<?php \r\n";
 						foreach($config as $key => $value){
 							$configfile .= "define('$key', '$value');\r\n";

@@ -6,9 +6,8 @@
  *		这个脚本比较简单 只是读取了插件已缓存好的数据 帖子列表页 帖子页插入了推荐信息
  */
 
-if(!defined('IN_DISCUZ')) {
-	exit('Access Denied');
-}
+!defined('IN_DISCUZ') && exit('Access Denied');
+
 class plugin_dzapp_haodai {
 	function common() {
 		global $_G;

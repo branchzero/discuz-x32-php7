@@ -6,16 +6,18 @@
  * @author BranchZero <branchzero@gmail.com>
  */
 
+!defined('IN_DISCUZ') && exit('Access Denied');
+
 include_once DISCUZ_ROOT.'./data/dzapp_haodai_config.php';
 include_once DISCUZ_ROOT.'./source/plugin/dzapp_haodai/haodai.api.class.php';
 include_once DISCUZ_ROOT.'./source/plugin/dzapp_haodai/dzapp_haodai.func.php';
 @include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_setting.php';
 @include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_city.php';
 require_once libfile('function/cache');
-!defined('IN_DISCUZ') && exit('Access Denied');
 
 $var = $_G['cache']['plugin']['dzapp_haodai'];
 $dzapp_haodai_seo = dunserialize($_G['setting']['dzapp_haodai_seo']);
+$current_host = parse_url($_G['siteurl'], PHP_URL_HOST);
 $action = $_GET['action'];
 if(!isset($hd_token)){
 	if($_G['adminid'] == 1){
@@ -107,7 +109,6 @@ if($action == ''){
 		}
 		writetocache('dzapp_haodai_xindai_ad_'.$city, getcachevars(array('xindai_ad_type' => $xindai_ad_type,'xindai_ad_detail' => $xindai_ad_detail)));
 	}
-
 	if(!@include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_dkgl_'.$city.'.php' || TIMESTAMP - filemtime(DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_dkgl_'.$city.'.php') > $var['refreshtime']){
 		$dkgl_article = get_article_dkgl_list();
 		writetocache('dzapp_haodai_dkgl_'.$city, getcachevars(array('dkgl_article' => $dkgl_article)));
@@ -230,7 +231,7 @@ if($action == ''){
 			if($_GET['has_creditcard'] == lang('plugin/dzapp_haodai','have') && (!$_GET['creditcard_num'] || !$_GET['creditcard_money'])) showmessage('dzapp_haodai:apply_incomplete');
 			if($_GET['has_debt'] == lang('plugin/dzapp_haodai','have') && !$_GET['debt_money']) showmessage('dzapp_haodai:apply_incomplete');
 			if($_GET['has_debt_loan'] == lang('plugin/dzapp_haodai','have') && !$_GET['debt_loan_money']) showmessage('dzapp_haodai:apply_incomplete');
-			$remark = lang('plugin/dzapp_haodai','remark_company_type').$_GET['company_type'].lang('plugin/dzapp_haodai','remark_birth').$_GET['year_born'].lang('plugin/dzapp_haodai','remark_salary_type').$_GET['salary_type'].lang('plugin/dzapp_haodai','remark_month_income').$_GET['salary'].lang('plugin/dzapp_haodai','remark_worktime').$_GET['job_year'].lang('plugin/dzapp_haodai','remark_year').$_GET['job_month'].lang('plugin/dzapp_haodai','remark_month').($_GET['has_creditcard'] == lang('plugin/dzapp_haodai','have') ? lang('plugin/dzapp_haodai','remark_has_card').$_GET['creditcard_num'].lang('plugin/dzapp_haodai','remark_card_num').$_GET['creditcard_money'].lang('plugin/dzapp_haodai','remark_yuan') : '').($_GET['has_debt'] == lang('plugin/dzapp_haodai','have') ? lang('plugin/dzapp_haodai','remark_has_debt').$_GET['debt_money'].lang('plugin/dzapp_haodai','remark_yuan') : '').lang('plugin/dzapp_haodai','remark_succeed_applied').$_GET['has_succ_apply'].($_GET['has_debt_loan'] == lang('plugin/dzapp_haodai','have') ? lang('plugin/dzapp_haodai','remark_has_debt_num').$_GET['debt_loan_money'].lang('plugin/dzapp_haodai','remark_yuan') : '');
+			$remark = lang('plugin/dzapp_haodai','remark_company_type').$_GET['company_type'].lang('plugin/dzapp_haodai','remark_birth').$_GET['year_born'].lang('plugin/dzapp_haodai','remark_salary_type').$_GET['salary_type'].lang('plugin/dzapp_haodai','remark_month_income').$_GET['salary'].lang('plugin/dzapp_haodai','remark_worktime').$_GET['job_year'].lang('plugin/dzapp_haodai','remark_year').$_GET['job_month'].lang('plugin/dzapp_haodai','remark_month').($_GET['has_creditcard'] == lang('plugin/dzapp_haodai','have') ? lang('plugin/dzapp_haodai','remark_has_card').$_GET['creditcard_num'].lang('plugin/dzapp_haodai','remark_card_num').$_GET['creditcard_money'].lang('plugin/dzapp_haodai','remark_yuan') : lang('plugin/dzapp_haodai','remark_has_card_no')).($_GET['has_debt'] == lang('plugin/dzapp_haodai','have') ? lang('plugin/dzapp_haodai','remark_has_debt').$_GET['debt_money'].lang('plugin/dzapp_haodai','remark_yuan') : lang('plugin/dzapp_haodai','remark_has_debt_no')).lang('plugin/dzapp_haodai','remark_succeed_applied').$_GET['has_succ_apply'].($_GET['has_debt_loan'] == lang('plugin/dzapp_haodai','have') ? lang('plugin/dzapp_haodai','remark_has_debt_num').$_GET['debt_loan_money'].lang('plugin/dzapp_haodai','remark_yuan') : lang('plugin/dzapp_haodai','remark_has_debt_num_no'));
 		}elseif($_GET['xd_type'] == 'goufang'){
 			if(!$_GET['house_type'] || !$_GET['monthly'] || !$_GET['hukou'] || !$_GET['has_secondhandhouse'] || !$_GET['nickname'] || !$_GET['mobile']) showmessage('dzapp_haodai:apply_incomplete');
 			$remark = lang('plugin/dzapp_haodai','remark_house_type').$_GET['house_type'].lang('plugin/dzapp_haodai','remark_month_income').$_GET['monthly'].lang('plugin/dzapp_haodai','remark_second_hand').$_GET['has_secondhandhouse'].lang('plugin/dzapp_haodai','remark_live_in').$_GET['hukou'];
@@ -330,11 +331,12 @@ if($action == ''){
 	$articles = $result['items'];
 	include template('dzapp_haodai:list');
 }elseif($action == 'calc'){
+	$type = $_GET['type'];
+	if(!in_array($type, array('chedai', 'debj', 'debx', 'esjys', 'fd', 'gjj', 'secondhand', 'zhdk'))) showmessage('dzapp_haodai:param_wrong');
 	if(!@include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_dkgl_'.$city.'.php' || TIMESTAMP - filemtime(DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_dkgl_'.$city.'.php') > $var['refreshtime']){
 		$dkgl_article = get_article_dkgl_list();
 		writetocache('dzapp_haodai_dkgl_'.$city, getcachevars(array('dkgl_article' => $dkgl_article)));
 	}
-	$type = $_GET['type'];
 	$seodata = array('bbname' => $_G['setting']['bbname'], 'calc_type' => lang('plugin/dzapp_haodai','calc_'.$type));
 	list($navtitle, $metadescription, $metakeywords) = get_seosetting('', $seodata, $dzapp_haodai_seo['calc']);
 	if(defined('IN_MOBILE') && $type == 'fd'){

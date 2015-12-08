@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: admincp_checktools.php 31554 2012-09-07 08:49:56Z monkey $
+ *      $Id: admincp_checktools.php 35472 2015-08-03 09:06:22Z nemohou $
  */
 
 if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
@@ -362,6 +362,14 @@ if($operation == 'filecheck') {
 
 	$settingnew = $_GET['settingnew'];
 	if(!empty($_GET['previewthumb'])) {
+		if(!is_dir($settingnew['imageimpath'])) {
+			$settingnew['imageimpath'] = '';
+		} else {
+			$settingnew['imageimpath'] = str_replace('\\', '/', $settingnew['imageimpath']);
+			if(!preg_match('/^[\!@#\$%\^&\(\)_\+\-\=\{\}\[\];\',\.\/\:\w\s]+$/', $settingnew['imageimpath'])) {
+				$settingnew['imageimpath'] = '';
+			}
+		}
 		$_G['setting']['imagelib'] = $settingnew['imagelib'];
 		$_G['setting']['imageimpath'] = $settingnew['imageimpath'];
 		$_G['setting']['thumbwidth'] = $settingnew['thumbwidth'];

@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: misc_swfupload.php 34113 2013-10-12 06:42:05Z nemohou $
+ *      $Id: misc_swfupload.php 35377 2015-07-07 05:20:23Z nemohou $
  */
 
 if(!defined('IN_DISCUZ')) {
@@ -56,8 +56,12 @@ if($_GET['operation'] == 'upload') {
 	$_FILES["Filedata"]['name'] = addslashes(diconv(urldecode($_FILES["Filedata"]['name']), 'UTF-8'));
 	$upload->init($_FILES['Filedata'], 'forum');
 	$attach = $upload->attach;
-	$upload->save();
-	$errorcode = 0;
+	if(!$upload->attach['isimage']) {
+		$errorcode = 4;
+	} else {
+		$upload->save();
+		$errorcode = 0;
+	}
 	if($upload->error()) {
 		$errorcode = 4;
 	} else {

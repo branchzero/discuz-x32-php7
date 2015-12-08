@@ -9,6 +9,7 @@
 if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 	exit('Access Denied');
 }
+
 $lang = array_merge($lang, $scriptlang['dzapp_haodai']);
 
 if(empty($_GET['ac'])) {

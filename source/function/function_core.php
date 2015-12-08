@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: function_core.php 35297 2015-06-05 03:28:45Z hypowang $
+ *      $Id: function_core.php 35335 2015-06-17 01:57:38Z hypowang $
  */
 
 if(!defined('IN_DISCUZ')) {
@@ -518,6 +518,7 @@ function checktplrefresh($maintpl, $subtpl, $timecompare, $templateid, $cachefil
 
 function template($file, $templateid = 0, $tpldir = '', $gettplfile = 0, $primaltpl='') {
 	global $_G;
+
 	static $_init_style = false;
 	if($_init_style === false) {
 		C::app()->_init_style();
@@ -636,7 +637,6 @@ function template($file, $templateid = 0, $tpldir = '', $gettplfile = 0, $primal
 	if($gettplfile) {
 		return $tplfile;
 	}
-
 	checktplrefresh($tplfile, $tplfile, @filemtime(DISCUZ_ROOT.$cachefile), $templateid, $cachefile, $tpldir, $file);
 	return DISCUZ_ROOT.$cachefile;
 }
@@ -1524,7 +1524,7 @@ function dreferer($default = '') {
 	}
 
 	$_G['referer'] = durlencode($_G['referer']);
-	return$_G['referer'];
+	return $_G['referer'];
 }
 
 function ftpcmd($cmd, $arg1 = '') {

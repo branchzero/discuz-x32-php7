@@ -4,30 +4,54 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: function_cloudaddons.php 34586 2014-06-05 01:45:26Z nemohou $
+ *      $Id: function_cloudaddons.php 35704 2015-12-01 05:13:54Z nemohou $
  */
 
 if(!defined('IN_DISCUZ')) {
 	exit('Access Denied');
 }
 
-define('CLOUDADDONS_WEBSITE_URL', 'http://addon.discuz.com');
-define('CLOUDADDONS_DOWNLOAD_URL', 'http://addon.discuz.com/index.php');
-define('CLOUDADDONS_DOWNLOAD_IP', '');
-define('CLOUDADDONS_CHECK_URL', 'http://addon1.discuz.com');
-define('CLOUDADDONS_CHECK_IP', '');
+$addonsource = $_G['config']['addonsource'] ? $_G['config']['addonsource'] : ($_G['setting']['addon_source'] ? $_G['setting']['addon_source'] : array());
+$addon = $addonsource ?
+	$_G['config']['addon'][$addonsource] :
+	array(
+		'website_url' => 'http://addon.discuz.com',
+		'download_url' => 'http://addon.discuz.com/index.php',
+		'download_ip' => '',
+		'check_url' => 'http://addon1.discuz.com/md5/',
+		'check_ip' => '',
+	);
+
+define('CLOUDADDONS_WEBSITE_URL', $addon['website_url']);
+define('CLOUDADDONS_DOWNLOAD_URL', $addon['download_url']);
+define('CLOUDADDONS_DOWNLOAD_IP', $addon['download_ip']);
+define('CLOUDADDONS_CHECK_URL', $addon['check_url']);
+define('CLOUDADDONS_CHECK_IP', $addon['check_ip']);
 
 function cloudaddons_md5($file) {
-	return dfsockopen(CLOUDADDONS_CHECK_URL.'/md5/'.$file, 0, '', '', false, CLOUDADDONS_CHECK_IP, 60);
+	return dfsockopen(CLOUDADDONS_CHECK_URL.$file, 0, '', '', false, CLOUDADDONS_CHECK_IP, 60);
 }
 
+function cloudaddons_getuniqueid() {
+	global $_G;
+	if(CLOUDADDONS_WEBSITE_URL == 'http://addon.discuz.com') {
+		return $_G['setting']['siteuniqueid'] ? $_G['setting']['siteuniqueid'] : C::t('common_setting')->fetch('siteuniqueid');
+	} else {
+		if(!$_G['setting']['addon_uniqueid']) {
+			$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+			$addonuniqueid = $chars[date('y')%60].$chars[date('n')].$chars[date('j')].$chars[date('G')].$chars[date('i')].$chars[date('s')].substr(md5($_G['clientip'].TIMESTAMP), 0, 4).random(6);
+			C::t('common_setting')->update('addon_uniqueid', $addonuniqueid);
+			require_once libfile('function/cache');
+			updatecache('setting');
+		}
+		return $_G['setting']['addon_uniqueid'];
+	}
+}
 function cloudaddons_url($extra) {
 	global $_G;
 
 	require_once DISCUZ_ROOT.'./source/discuz_version.php';
-
-	$uniqueid = $_G['setting']['siteuniqueid'] ? $_G['setting']['siteuniqueid'] : C::t('common_setting')->fetch('siteuniqueid');
-	$data = 'siteuniqueid='.rawurlencode($uniqueid).'&siteurl='.rawurlencode($_G['siteurl']).'&sitever='.DISCUZ_VERSION.'/'.DISCUZ_RELEASE.'&sitecharset='.CHARSET.'&mysiteid='.$_G['setting']['my_siteid'];
+	$data = 'siteuniqueid='.rawurlencode(cloudaddons_getuniqueid()).'&siteurl='.rawurlencode($_G['siteurl']).'&sitever='.DISCUZ_VERSION.'/'.DISCUZ_RELEASE.'&sitecharset='.CHARSET.'&mysiteid='.$_G['setting']['my_siteid'];
 	$param = 'data='.rawurlencode(base64_encode($data));
 	$param .= '&md5hash='.substr(md5($data.TIMESTAMP), 8, 8).'&timestamp='.TIMESTAMP;
 	return CLOUDADDONS_DOWNLOAD_URL.'?'.$param.$extra;
@@ -36,12 +60,6 @@ function cloudaddons_url($extra) {
 function cloudaddons_check() {
 	if(!function_exists('gzuncompress')) {
 		cpmsg('cloudaddons_check_gzuncompress_error', '', 'error');
-	}
-	if(dfsockopen(CLOUDADDONS_WEBSITE_URL.'/image/logo.png', 4, '', '', false, CLOUDADDONS_DOWNLOAD_IP, 60) !== chr(0x89).'PNG') {
-		cpmsg('cloudaddons_check_url_fopen_error', '', 'error');
-	}
-	if(dfsockopen(CLOUDADDONS_CHECK_URL.'/logo.png', 4, '', '', false, CLOUDADDONS_CHECK_IP, 60) !== chr(0x89).'PNG') {
-		cpmsg('cloudaddons_check_url_fopen_error', '', 'error');
 	}
 	foreach(array('download', 'addonmd5') as $path) {
 		$tmpdir = DISCUZ_ROOT.'./data/'.$path.'/'.random(5);

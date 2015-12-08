@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DZAPP Haodai Admin Control Panel -- City List
  *
@@ -6,12 +7,14 @@
  * @author BranchZero <branchzero@gmail.com>
  */
 
+if(!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
+	exit('Access Denied');
+}
+
 include_once DISCUZ_ROOT.'./data/dzapp_haodai_config.php';
 include_once DISCUZ_ROOT.'./source/plugin/dzapp_haodai/haodai.api.class.php';
 @include_once DISCUZ_ROOT.'./data/sysdata/cache_dzapp_haodai_setting.php';
-if(!defined('IN_DISCUZ') || !defined('IN_DISCUZ')) {
-	exit('Access Denied');
-}
+
 loadcache('plugin');
 $lang = array_merge($lang, $scriptlang['dzapp_haodai']);
 $var = $_G['cache']['plugin']['dzapp_haodai'];
@@ -64,6 +67,7 @@ if(isset($hd_token)){
 		$config['HD_CALLBACK_URL'] = HD_CALLBACK_URL;
 		$config['HD_API_HOST'] = HD_API_HOST;
 		$config['HD_CITY'] = $_GET['CITY'];
+		$config = daddslashes($config);
 		$configfile = "<?php \r\n";
 		foreach($config as $key => $value){
 			$configfile .= "define('$key', '$value');\r\n";

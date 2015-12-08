@@ -14,7 +14,7 @@
 			<item id="datatables"><![CDATA[]]></item>
 			<item id="directory"><![CDATA[dzapp_haodai/]]></item>
 			<item id="copyright"><![CDATA[BranchZero @ DzAPP]]></item>
-			<item id="version"><![CDATA[2.0.2]]></item>
+			<item id="version"><![CDATA[2.0.8]]></item>
 			<item id="__modules">
 				<item id="0">
 					<item id="name"><![CDATA[admincp_callback]]></item>
@@ -203,10 +203,13 @@
 				<item id="remark_year"><![CDATA[年]]></item>
 				<item id="remark_month"><![CDATA[月]]></item>
 				<item id="remark_has_card"><![CDATA[|您是否有信用卡:有|您有几张信用卡:]]></item>
+				<item id="remark_has_card_no"><![CDATA[|您是否有信用卡:没有]]></item>
 				<item id="remark_card_num"><![CDATA[张|额度总额是多少:]]></item>
 				<item id="remark_yuan"><![CDATA[元]]></item>
 				<item id="remark_has_debt"><![CDATA[|是否有负债（信用卡）:有|负债多少:]]></item>
+				<item id="remark_has_debt_no"><![CDATA[|是否有负债（信用卡）:没有]]></item>
 				<item id="remark_succeed_applied"><![CDATA[|您之前是否成功申请贷款:]]></item>
+				<item id="remark_has_debt_num_no"><![CDATA[|是否有负债（贷款）:没有]]></item>
 				<item id="remark_has_debt_num"><![CDATA[|是否有负债（贷款）:有|负债多少:]]></item>
 				<item id="remark_house_type"><![CDATA[房屋类型:]]></item>
 				<item id="remark_first_house"><![CDATA[元|是否首套房:]]></item>
