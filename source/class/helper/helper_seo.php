@@ -47,8 +47,8 @@ class helper_seo {
 
 
 	public static function strreplace_strip_split($searchs, $replaces, $str) {
-		$searchspace = array('((\s*\-\s*)+)', '((\s*\,\s*)+)', '((\s*\|\s*)+)', '((\s*\t\s*)+)', '((\s*_\s*)+)');
-		$replacespace = array('-', ',', '|', ' ', '_');
+		$searchspace = array('(((\s)*\-(\s)*)+)', '(((\s)*\,(\s)*)+)', '(((\s)*\|(\s)*)+)', '(((\s)*\t(\s)*)+)', '(((\s)*_(\s)*)+)');
+		$replacespace = array('$3-$3', '$3,$3', '$3|$3', '$3 $3', '$3_$3');
 		return trim(preg_replace($searchspace, $replacespace, str_replace($searchs, $replaces, $str)), ' ,-|_');
 	}
 
