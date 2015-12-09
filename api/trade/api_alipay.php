@@ -32,7 +32,7 @@ function credit_payurl($price, &$orderid) {
 	$args = array(
 		'subject' 		=> $_G['setting']['bbname'].' - '.$_G['member']['username'].' - '.lang('forum/misc', 'credit_payment'),
 		'body' 			=> lang('forum/misc', 'credit_forum_payment').' '.$_G['setting']['extcredits'][$_G['setting']['creditstrans']]['title'].' '.intval($price * $_G['setting']['ec_ratio']).' '.$_G['setting']['extcredits'][$_G['setting']['creditstrans']]['unit'],
-		'service' 		=> 'trade_create_by_buyer',
+		'service' => 'create_partner_trade_by_buyer',
 		'partner' 		=> DISCUZ_PARTNER,
 		'notify_url' 		=> $_G['siteurl'].'api/trade/notify_credit.php',
 		'return_url' 		=> $_G['siteurl'].'api/trade/notify_credit.php',
