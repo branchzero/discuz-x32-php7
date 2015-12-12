@@ -228,7 +228,7 @@ if($op == 'comment') {
 	if($values[3]) {
 		$level++;
 	}
-	$showlevel = $level;
+	$showlevel = $showlevel < $level ? $showlevel : $level;
 	$elems = array();
 	if($_GET['province']) {
 		$elems = array($_GET['province'], $_GET['city'], $_GET['district'], $_GET['community']);
