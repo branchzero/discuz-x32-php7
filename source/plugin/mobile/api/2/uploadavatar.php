@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?php
 /**
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
@@ -293,4 +292,3 @@ class mobile_api {
 }
 
 ?>
->>>>>>> origin/dev
