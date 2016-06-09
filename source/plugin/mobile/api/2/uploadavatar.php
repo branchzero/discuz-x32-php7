@@ -62,27 +62,27 @@ class mobile_api {
 			self::error('api_uploadavatar_unusable_image');
 		}
 
-		self::tmpavatar = $tmpavatar;
-		self::tmpavatarbig = $avatarpath.$tmpavatarbig;
-		self::tmpavatarmiddle = $avatarpath.$tmpavatarmiddle;
-		self::tmpavatarsmall = $avatarpath.$tmpavatarsmall;
+		self::$tmpavatar = $tmpavatar;
+		self::$tmpavatarbig = $avatarpath.$tmpavatarbig;
+		self::$tmpavatarmiddle = $avatarpath.$tmpavatarmiddle;
+		self::$tmpavatarsmall = $avatarpath.$tmpavatarsmall;
 	}
 
 	public static function output() {
 		global $_G;
 		if(!empty($_G['uid'])) {
-			if(self::tmpavatarbig && self::tmpavatarmiddle && self::tmpavatarsmall) {
-				$avatar1 = self::byte2hex(file_get_contents(self::tmpavatarbig));
-				$avatar2 = self::byte2hex(file_get_contents(self::tmpavatarmiddle));
-				$avatar3 = self::byte2hex(file_get_contents(self::tmpavatarsmall));
+			if(self::$tmpavatarbig && self::$tmpavatarmiddle && self::$tmpavatarsmall) {
+				$avatar1 = self::byte2hex(file_get_contents(self::$tmpavatarbig));
+				$avatar2 = self::byte2hex(file_get_contents(self::$tmpavatarmiddle));
+				$avatar3 = self::byte2hex(file_get_contents(self::$tmpavatarsmall));
 
 				$extra = '&avatar1='.$avatar1.'&avatar2='.$avatar2.'&avatar3='.$avatar3;
 				$result = self::uc_api_post_ex('user', 'rectavatar', array('uid' => $_G['uid']), $extra);
 
-				@unlink(self::tmpavatar);
-				@unlink(self::tmpavatarbig);
-				@unlink(self::tmpavatarmiddle);
-				@unlink(self::tmpavatarsmall);
+				@unlink(self::$tmpavatar);
+				@unlink(self::$tmpavatarbig);
+				@unlink(self::$tmpavatarmiddle);
+				@unlink(self::$tmpavatarsmall);
 
 				if($result == '<?xml version="1.0" ?><root><face success="1"/></root>') {
 					$variable = array(
