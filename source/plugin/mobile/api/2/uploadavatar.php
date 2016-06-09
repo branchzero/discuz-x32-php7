@@ -79,10 +79,10 @@ class mobile_api {
 				$extra = '&avatar1='.$avatar1.'&avatar2='.$avatar2.'&avatar3='.$avatar3;
 				$result = self::uc_api_post_ex('user', 'rectavatar', array('uid' => $_G['uid']), $extra);
 
-				@unlink($this->tmpavatar);
-				@unlink($this->tmpavatarbig);
-				@unlink($this->tmpavatarmiddle);
-				@unlink($this->tmpavatarsmall);
+				@unlink(self::tmpavatar);
+				@unlink(self::tmpavatarbig);
+				@unlink(self::tmpavatarmiddle);
+				@unlink(self::tmpavatarsmall);
 
 				if($result == '<?xml version="1.0" ?><root><face success="1"/></root>') {
 					$variable = array(
